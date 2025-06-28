@@ -29,3 +29,5 @@ export const healthRoutes: FastifyPluginAsync = async (app) => {
 // Contribution by CelestinaBeing — 2025-03-13
 
 // Contribution by joelpeace48-cell — 2025-05-05
+
+// Contribution by Williams-1604 — 2025-06-28
