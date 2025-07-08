@@ -29,3 +29,5 @@ export const v1Routes: FastifyPluginAsync = async (app) => {
 // Contribution by kulayddon — 2025-03-24
 
 // Contribution by CelestinaBeing — 2025-05-16
+
+// Contribution by joelpeace48-cell — 2025-07-08
