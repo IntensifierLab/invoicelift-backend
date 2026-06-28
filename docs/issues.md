@@ -6,3 +6,7 @@
 **Acceptance Criteria:**
 - Automated checks against previously financed invoices.
 - Admin endpoints to manually trigger a state freeze.
+
+## Issue: Add automated repayment notification emails
+**Labels:** `enhancement`, `notifications`
+**Description:** Send email alerts to SMEs X days before an invoice repayment is due to the pool, reducing accidental delinquencies.
