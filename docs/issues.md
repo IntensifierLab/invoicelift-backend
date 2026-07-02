@@ -10,3 +10,8 @@
 ## Issue: Add automated repayment notification emails
 **Labels:** `enhancement`, `notifications`
 **Description:** Send email alerts to SMEs X days before an invoice repayment is due to the pool, reducing accidental delinquencies.
+**Acceptance Criteria:**
+- Cron job for daily checks of upcoming dues.
+- Integration with email provider (e.g., SendGrid).
+- Customizable email templates.
+
