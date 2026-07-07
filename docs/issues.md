@@ -15,3 +15,9 @@
 - Integration with email provider (e.g., SendGrid).
 - Customizable email templates.
 
+## Issue: Integrate with accounting software APIs
+**Labels:** `feature`, `integrations`
+**Description:** Allow SMEs to connect their accounting software (e.g., Xero, QuickBooks) to automatically sync and verify invoices for financing.
+**Acceptance Criteria:**
+- OAuth2 flow for at least one major accounting platform.
+- Webhook endpoints to handle invoice status changes from the accounting software.
