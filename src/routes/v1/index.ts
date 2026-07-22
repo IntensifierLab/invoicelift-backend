@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { delinquencyRoutes } from "./delinquency.js";
+import { repaymentRoutes } from "./repayments.js";
 
 export const v1Routes: FastifyPluginAsync = async (app) => {
   app.get("/meta", async () => ({
@@ -9,6 +10,7 @@ export const v1Routes: FastifyPluginAsync = async (app) => {
   }));
 
   await app.register(delinquencyRoutes);
+  await app.register(repaymentRoutes);
 };
 
 // Contribution check by robert-j at 2024-11-18T13:22:45
