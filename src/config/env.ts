@@ -19,6 +19,12 @@ const schema = z.object({
   SOROBAN_RPC_URL: z.string().optional(),
   SOROBAN_POOL_MANAGER_CONTRACT_ID: z.string().optional(),
   DRAWDOWN_REQUEST_PCT: z.coerce.number().min(0).max(1).default(0.1),
+  INVOICE_VERIFICATION_TIMEOUT_DAYS: z.coerce.number().int().positive().default(7),
+  INVOICE_TIMEOUT_CHECK_INTERVAL_MINUTES: z.coerce.number().int().positive().default(60),
+  ENABLE_INVOICE_TIMEOUT_MONITOR: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
 });
 
 const raw = schema.parse(process.env);
@@ -38,6 +44,9 @@ export const config = {
   sorobanRpcUrl: raw.SOROBAN_RPC_URL,
   sorobanPoolManagerContractId: raw.SOROBAN_POOL_MANAGER_CONTRACT_ID,
   drawdownRequestPct: raw.DRAWDOWN_REQUEST_PCT,
+  invoiceVerificationTimeoutDays: raw.INVOICE_VERIFICATION_TIMEOUT_DAYS,
+  invoiceTimeoutCheckIntervalMinutes: raw.INVOICE_TIMEOUT_CHECK_INTERVAL_MINUTES,
+  enableInvoiceTimeoutMonitor: raw.ENABLE_INVOICE_TIMEOUT_MONITOR,
 };
 
 // Contribution check by johndoedev at 2024-11-08T05:55:51
