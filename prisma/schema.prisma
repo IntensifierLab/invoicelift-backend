@@ -31,6 +31,23 @@ enum AuditAction {
   DRAWDOWN_CONFIRMATION_FAILED
 }
 
+enum InvoiceStatus {
+  PENDING_SME_SIGNATURE
+  PENDING_BUYER_SIGNATURE
+  VERIFIED
+  REJECTED
+}
+
+enum InvoiceAuditAction {
+  INVOICE_CREATED
+  SME_SIGNATURE_VERIFIED
+  SME_SIGNATURE_REJECTED
+  BUYER_SIGNATURE_VERIFIED
+  BUYER_SIGNATURE_REJECTED
+  VERIFICATION_COMPLETED
+  VERIFICATION_EXPIRED
+}
+
 // Stand-in for the on-chain pool-manager contract state until a real Soroban reader exists.
 model Pool {
   id              String   @id @default(cuid())
@@ -91,4 +108,42 @@ model FacilityAuditEntry {
 
   @@index([treatyId])
   @@index([drawdownId])
+}
+
+model Invoice {
+  id                   String        @id @default(cuid())
+  reference            String        @unique
+  smeAddress           String
+  buyerAddress         String
+  amount               Int
+  currency             String        @default("USD")
+  dueDate              DateTime
+  invoiceHash          String
+  status               InvoiceStatus @default(PENDING_SME_SIGNATURE)
+  smeSignature         String?
+  smeSignedAt          DateTime?
+  buyerSignature       String?
+  buyerSignedAt        DateTime?
+  verificationDeadline DateTime?
+  rejectionReason      String?
+  verifiedAt           DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  auditEntries InvoiceAuditEntry[]
+
+  @@index([status])
+  @@index([verificationDeadline])
+}
+
+model InvoiceAuditEntry {
+  id        String              @id @default(cuid())
+  action    InvoiceAuditAction
+  actor     String
+  invoiceId String
+  invoice   Invoice             @relation(fields: [invoiceId], references: [id])
+  detail    Json
+  createdAt DateTime            @default(now())
+
+  @@index([invoiceId])
 }
