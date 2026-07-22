@@ -1,21 +1,5 @@
-import Fastify from "fastify";
-import cors from "@fastify/cors";
 import { config } from "./config/env.js";
-import { healthRoutes } from "./routes/health.js";
-import { v1Routes } from "./routes/v1/index.js";
-
-async function buildServer() {
-  const app = Fastify({ logger: true });
-
-  await app.register(cors, {
-    origin: config.corsOrigin,
-  });
-
-  await app.register(healthRoutes);
-  await app.register(v1Routes, { prefix: config.apiPrefix });
-
-  return app;
-}
+import { buildServer } from "./server.js";
 
 buildServer()
   .then((app) =>

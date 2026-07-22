@@ -15,7 +15,15 @@ jobs:
           node-version: "22"
       - name: Install dependencies
         run: npm install
+      - name: Run migrations (test db)
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: "file:./test.db"
       - name: Typecheck
         run: npm run lint
+      - name: Test
+        run: npm test
+        env:
+          DATABASE_URL: "file:./test.db"
       - name: Build
         run: npm run build
