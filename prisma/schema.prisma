@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum TreatyStatus {
+  ACTIVE
+  SUSPENDED
+  TERMINATED
+}
+
+enum DrawdownStatus {
+  PENDING
+  REQUESTED
+  CONFIRMED
+  FAILED
+}
+
+enum AuditAction {
+  TREATY_CREATED
+  TREATY_UPDATED
+  MONITOR_CHECK_RUN
+  THRESHOLD_BREACH_DETECTED
+  CAPITAL_REQUESTED
+  CAPITAL_REQUEST_FAILED
+  DRAWDOWN_CONFIRMED
+  DRAWDOWN_CONFIRMATION_FAILED
+}
+
+// Stand-in for the on-chain pool-manager contract state until a real Soroban reader exists.
+model Pool {
+  id              String   @id @default(cuid())
+  poolId          String   @unique
+  totalCapital    Int
+  utilisedCapital Int
+  updatedAt       DateTime @updatedAt
+}
+
+model Treaty {
+  id               String   @id @default(cuid())
+  poolId           String
+  reinsurerName    String
+  facilityLimit    Int
+  triggerThreshold Float
+  costBps          Int
+  currency         String   @default("USD")
+  status           TreatyStatus @default(ACTIVE)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  drawdowns    CapitalDrawdown[]
+  auditEntries FacilityAuditEntry[]
+
+  @@index([poolId])
+}
+
+model CapitalDrawdown {
+  id                 String         @id @default(cuid())
+  treatyId           String
+  treaty             Treaty         @relation(fields: [treatyId], references: [id])
+  amountRequested    Int
+  triggerReason      String
+  status             DrawdownStatus @default(PENDING)
+  reinsurerRequestId String?
+  reinsurerResponse  Json?
+  onChainTxHash      String?
+  onChainConfirmedAt DateTime?
+  failureReason      String?
+  requestedAt        DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  auditEntries FacilityAuditEntry[]
+
+  @@index([treatyId])
+}
+
+model FacilityAuditEntry {
+  id         String      @id @default(cuid())
+  action     AuditAction
+  actor      String
+  treatyId   String?
+  treaty     Treaty?     @relation(fields: [treatyId], references: [id])
+  drawdownId String?
+  drawdown   CapitalDrawdown? @relation(fields: [drawdownId], references: [id])
+  detail     Json
+  createdAt  DateTime    @default(now())
+
+  @@index([treatyId])
+  @@index([drawdownId])
+}
