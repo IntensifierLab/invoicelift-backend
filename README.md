@@ -118,7 +118,7 @@ cd backend && npm run dev
 cd ../frontend && npm install && npm run dev
 ```
 
-Set `CORS_ORIGIN` in `.env` to match the web origin (e.g. `http://localhost:3000`).
+Set `CORS_ORIGIN` in `.env` to match the web origin (e.g. `http://localhost:3000`). Keep `.env.example` as the canonical, non-secret reference for every implemented environment variable.
 
 ---
 
@@ -135,6 +135,8 @@ Set `CORS_ORIGIN` in `.env` to match the web origin (e.g. `http://localhost:3000
 ---
 
 ## 🔐 Environment variables
+
+Copy [`.env.example`](./.env.example) before local development; it lists every environment variable currently parsed by `src/config/env.ts` with a placeholder and purpose comment.
 
 ### Baseline (implemented)
 
