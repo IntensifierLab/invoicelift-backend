@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
+import { delinquencyRoutes } from "./delinquency.js";
 import { repaymentRoutes } from "./repayments.js";
 
 export const v1Routes: FastifyPluginAsync = async (app) => {
@@ -8,6 +9,7 @@ export const v1Routes: FastifyPluginAsync = async (app) => {
     description: "REST facade for Soroban contracts and indexers (scaffold).",
   }));
 
+  await app.register(delinquencyRoutes);
   await app.register(repaymentRoutes);
 };
 
