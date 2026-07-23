@@ -1,45 +1,34 @@
 import type { FastifyPluginAsync } from "fastify";
 
-export const healthRoutes: FastifyPluginAsync = async (app) => {
-  app.get("/health", async () => ({
-    status: "ok",
-    service: "api",
-    timestamp: new Date().toISOString(),
-  }));
+export interface HealthRoutesOptions {
+  checkCriticalDependency?: () => Promise<void>;
+  now?: () => number;
+  startedAt?: number;
+  version?: string;
+}
+
+const PROCESS_STARTED_AT = Date.now();
+const DEFAULT_VERSION = process.env.npm_package_version ?? "0.1.0";
+
+export const healthRoutes: FastifyPluginAsync<HealthRoutesOptions> = async (app, options) => {
+  const startedAt = options.startedAt ?? PROCESS_STARTED_AT;
+  const now = options.now ?? Date.now;
+  const version = options.version ?? DEFAULT_VERSION;
+  const checkCriticalDependency = options.checkCriticalDependency ?? (async () => {});
+
+  app.get("/health", async (_request, reply) => {
+    const uptime = Math.max(0, Math.floor((now() - startedAt) / 1000));
+
+    try {
+      await checkCriticalDependency();
+      return { status: "ok", version, uptime };
+    } catch {
+      return reply.code(503).send({
+        status: "unavailable",
+        version,
+        uptime,
+        error: "critical dependency unavailable",
+      });
+    }
+  });
 };
-
-// Contribution check by lisap at 2024-11-15T02:53:47
-
-// Contribution check by karen-s at 2025-02-19T08:24:49
-
-// Contribution check by alexdev99 at 2025-05-26T13:55:51
-
-// Contribution check by lisap at 2025-08-30T19:26:53
-
-// Contribution check by karen-s at 2025-12-05T00:57:55
-
-// Contribution check by alexdev99 at 2026-03-11T06:28:57
-
-// Contribution check by lisap at 2026-06-15T11:59:59
-
-// Contribution by WIAG1949 — 2024-11-26
-
-// Contribution by kulayddon — 2025-01-18
-
-// Contribution by CelestinaBeing — 2025-03-13
-
-// Contribution by joelpeace48-cell — 2025-05-05
-
-// Contribution by Williams-1604 — 2025-06-28
-
-// Contribution by codemagician1949 — 2025-08-20
-
-// Contribution by WIAG1949 — 2025-10-12
-
-// Contribution by kulayddon — 2025-12-05
-
-// Contribution by CelestinaBeing — 2026-01-27
-
-// Contribution by joelpeace48-cell — 2026-03-22
-
-// Contribution by Williams-1604 — 2026-05-14
