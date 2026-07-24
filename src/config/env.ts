@@ -25,6 +25,8 @@ const schema = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((v) => v === "true"),
+  GOVERNANCE_MIN_POOL_CAPITAL: z.coerce.number().int().positive().default(1),
+  GOVERNANCE_MAX_POOL_CAPITAL: z.coerce.number().int().positive().default(100_000_000),
 });
 
 const raw = schema.parse(process.env);
@@ -47,6 +49,8 @@ export const config = {
   invoiceVerificationTimeoutDays: raw.INVOICE_VERIFICATION_TIMEOUT_DAYS,
   invoiceTimeoutCheckIntervalMinutes: raw.INVOICE_TIMEOUT_CHECK_INTERVAL_MINUTES,
   enableInvoiceTimeoutMonitor: raw.ENABLE_INVOICE_TIMEOUT_MONITOR,
+  governanceMinPoolCapital: raw.GOVERNANCE_MIN_POOL_CAPITAL,
+  governanceMaxPoolCapital: raw.GOVERNANCE_MAX_POOL_CAPITAL,
 };
 
 // Contribution check by johndoedev at 2024-11-08T05:55:51
