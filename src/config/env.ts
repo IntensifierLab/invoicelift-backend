@@ -25,6 +25,8 @@ const schema = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((v) => v === "true"),
+  MAIL_TRANSPORT_MODE: z.enum(["stub", "smtp"]).default("stub"),
+  MAIL_FROM_ADDRESS: z.string().default("notifications@invoicelift.local"),
 });
 
 const raw = schema.parse(process.env);
@@ -47,6 +49,8 @@ export const config = {
   invoiceVerificationTimeoutDays: raw.INVOICE_VERIFICATION_TIMEOUT_DAYS,
   invoiceTimeoutCheckIntervalMinutes: raw.INVOICE_TIMEOUT_CHECK_INTERVAL_MINUTES,
   enableInvoiceTimeoutMonitor: raw.ENABLE_INVOICE_TIMEOUT_MONITOR,
+  mailTransportMode: raw.MAIL_TRANSPORT_MODE,
+  mailFromAddress: raw.MAIL_FROM_ADDRESS,
 };
 
 // Contribution check by johndoedev at 2024-11-08T05:55:51
