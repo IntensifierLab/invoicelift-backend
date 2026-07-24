@@ -27,6 +27,9 @@ const schema = z.object({
     .transform((v) => v === "true"),
   GOVERNANCE_MIN_POOL_CAPITAL: z.coerce.number().int().positive().default(1),
   GOVERNANCE_MAX_POOL_CAPITAL: z.coerce.number().int().positive().default(100_000_000),
+  SYSTEMIC_RISK_UTILISATION_THRESHOLD: z.coerce.number().min(0).max(1).default(0.85),
+  SYSTEMIC_RISK_BUYER_CONCENTRATION_THRESHOLD: z.coerce.number().min(0).max(1).default(0.25),
+  SYSTEMIC_RISK_CORRELATION_THRESHOLD: z.coerce.number().min(0).max(1).default(0.3),
   MAIL_TRANSPORT_MODE: z.enum(["stub", "smtp"]).default("stub"),
   MAIL_FROM_ADDRESS: z.string().default("notifications@invoicelift.local"),
 });
@@ -53,6 +56,9 @@ export const config = {
   enableInvoiceTimeoutMonitor: raw.ENABLE_INVOICE_TIMEOUT_MONITOR,
   governanceMinPoolCapital: raw.GOVERNANCE_MIN_POOL_CAPITAL,
   governanceMaxPoolCapital: raw.GOVERNANCE_MAX_POOL_CAPITAL,
+  systemicRiskUtilisationThreshold: raw.SYSTEMIC_RISK_UTILISATION_THRESHOLD,
+  systemicRiskBuyerConcentrationThreshold: raw.SYSTEMIC_RISK_BUYER_CONCENTRATION_THRESHOLD,
+  systemicRiskCorrelationThreshold: raw.SYSTEMIC_RISK_CORRELATION_THRESHOLD,
   mailTransportMode: raw.MAIL_TRANSPORT_MODE,
   mailFromAddress: raw.MAIL_FROM_ADDRESS,
 };

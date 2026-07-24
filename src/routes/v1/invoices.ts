@@ -27,6 +27,7 @@ const createInvoiceSchema = z.object({
   amount: z.number().int().positive(),
   currency: z.string().min(1).optional(),
   dueDate: z.coerce.date(),
+  poolId: z.string().min(1).optional(),
 });
 
 const signatureSchema = z.object({
