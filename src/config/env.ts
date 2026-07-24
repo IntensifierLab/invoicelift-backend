@@ -6,6 +6,7 @@ const schema = z.object({
   PORT: z.coerce.number().default(8080),
   API_PREFIX: z.string().default("/api/v1"),
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
+  JWT_SECRET: z.string().min(32),
   DATABASE_URL: z.string().default("file:./dev.db"),
   MONITOR_INTERVAL_MINUTES: z.coerce.number().int().positive().default(30),
   ENABLE_FACILITY_MONITOR: z
@@ -34,6 +35,7 @@ export const config = {
   port: raw.PORT,
   apiPrefix: raw.API_PREFIX,
   corsOrigin: raw.CORS_ORIGIN,
+  jwtSecret: raw.JWT_SECRET,
   databaseUrl: raw.DATABASE_URL,
   monitorIntervalMinutes: raw.MONITOR_INTERVAL_MINUTES,
   enableFacilityMonitor: raw.ENABLE_FACILITY_MONITOR,

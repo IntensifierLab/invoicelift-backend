@@ -5,6 +5,7 @@ import { invoiceRoutes } from "./invoices.js";
 import { treatyRoutes } from "./treaties.js";
 import { delinquencyRoutes } from "./delinquency.js";
 import { repaymentRoutes } from "./repayments.js";
+import { authRoutes } from "./auth.js";
 
 export const v1Routes: FastifyPluginAsync = async (app) => {
   app.get("/meta", async () => ({
@@ -17,6 +18,7 @@ export const v1Routes: FastifyPluginAsync = async (app) => {
   await app.register(drawdownRoutes);
   await app.register(auditRoutes);
   await app.register(invoiceRoutes);
+  await app.register(authRoutes);
 
   // TODO: routes for webhook ingestion, admin ops
   await app.register(delinquencyRoutes);

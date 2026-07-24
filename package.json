@@ -23,6 +23,7 @@
     "@stellar/stellar-sdk": "^16.1.0",
     "dotenv": "^16.4.7",
     "fastify": "^5.2.1",
+    "jose": "^6.2.4",
     "zod": "^3.24.1"
   },
   "devDependencies": {

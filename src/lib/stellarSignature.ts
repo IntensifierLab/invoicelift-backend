@@ -22,3 +22,16 @@ export function verifyInvoiceSignature(
     return false;
   }
 }
+
+export function verifyStellarSignature(
+  address: string,
+  message: string,
+  signatureBase64: string,
+): boolean {
+  try {
+    const signature = Buffer.from(signatureBase64, "base64");
+    return Keypair.fromPublicKey(address).verify(Buffer.from(message, "utf8"), signature);
+  } catch {
+    return false;
+  }
+}
