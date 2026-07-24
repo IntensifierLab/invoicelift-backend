@@ -115,6 +115,10 @@ model Invoice {
   reference            String        @unique
   smeAddress           String
   buyerAddress         String
+  // Which pool this invoice's financing draws from, if any. Nullable/loose
+  // (no FK to Pool.poolId) because invoices can exist before a pool
+  // assignment, and Pool rows are a stand-in for on-chain state.
+  poolId               String?
   amount               Int
   currency             String        @default("USD")
   dueDate              DateTime
@@ -134,6 +138,8 @@ model Invoice {
 
   @@index([status])
   @@index([verificationDeadline])
+  @@index([poolId])
+  @@index([buyerAddress])
 }
 
 model InvoiceAuditEntry {

@@ -25,6 +25,9 @@ const schema = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((v) => v === "true"),
+  SYSTEMIC_RISK_UTILISATION_THRESHOLD: z.coerce.number().min(0).max(1).default(0.85),
+  SYSTEMIC_RISK_BUYER_CONCENTRATION_THRESHOLD: z.coerce.number().min(0).max(1).default(0.25),
+  SYSTEMIC_RISK_CORRELATION_THRESHOLD: z.coerce.number().min(0).max(1).default(0.3),
 });
 
 const raw = schema.parse(process.env);
@@ -47,6 +50,9 @@ export const config = {
   invoiceVerificationTimeoutDays: raw.INVOICE_VERIFICATION_TIMEOUT_DAYS,
   invoiceTimeoutCheckIntervalMinutes: raw.INVOICE_TIMEOUT_CHECK_INTERVAL_MINUTES,
   enableInvoiceTimeoutMonitor: raw.ENABLE_INVOICE_TIMEOUT_MONITOR,
+  systemicRiskUtilisationThreshold: raw.SYSTEMIC_RISK_UTILISATION_THRESHOLD,
+  systemicRiskBuyerConcentrationThreshold: raw.SYSTEMIC_RISK_BUYER_CONCENTRATION_THRESHOLD,
+  systemicRiskCorrelationThreshold: raw.SYSTEMIC_RISK_CORRELATION_THRESHOLD,
 };
 
 // Contribution check by johndoedev at 2024-11-08T05:55:51
