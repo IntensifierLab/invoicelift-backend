@@ -18,6 +18,7 @@ export interface CreateInvoiceInput {
   amount: number;
   currency?: string;
   dueDate: Date;
+  poolId?: string;
 }
 
 export interface SignatureResult {
@@ -45,6 +46,7 @@ export async function createInvoice(
       reference: input.reference,
       smeAddress: input.smeAddress,
       buyerAddress: input.buyerAddress,
+      poolId: input.poolId,
       amount: input.amount,
       currency,
       dueDate: input.dueDate,

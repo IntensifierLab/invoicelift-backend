@@ -25,6 +25,9 @@ const schema = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((v) => v === "true"),
+  SYSTEMIC_RISK_UTILISATION_THRESHOLD: z.coerce.number().min(0).max(1).default(0.85),
+  SYSTEMIC_RISK_BUYER_CONCENTRATION_THRESHOLD: z.coerce.number().min(0).max(1).default(0.25),
+  SYSTEMIC_RISK_CORRELATION_THRESHOLD: z.coerce.number().min(0).max(1).default(0.3),
   MAIL_TRANSPORT_MODE: z.enum(["stub", "smtp"]).default("stub"),
   MAIL_FROM_ADDRESS: z.string().default("notifications@invoicelift.local"),
 });
@@ -49,6 +52,9 @@ export const config = {
   invoiceVerificationTimeoutDays: raw.INVOICE_VERIFICATION_TIMEOUT_DAYS,
   invoiceTimeoutCheckIntervalMinutes: raw.INVOICE_TIMEOUT_CHECK_INTERVAL_MINUTES,
   enableInvoiceTimeoutMonitor: raw.ENABLE_INVOICE_TIMEOUT_MONITOR,
+  systemicRiskUtilisationThreshold: raw.SYSTEMIC_RISK_UTILISATION_THRESHOLD,
+  systemicRiskBuyerConcentrationThreshold: raw.SYSTEMIC_RISK_BUYER_CONCENTRATION_THRESHOLD,
+  systemicRiskCorrelationThreshold: raw.SYSTEMIC_RISK_CORRELATION_THRESHOLD,
   mailTransportMode: raw.MAIL_TRANSPORT_MODE,
   mailFromAddress: raw.MAIL_FROM_ADDRESS,
 };
