@@ -32,6 +32,9 @@ const schema = z.object({
   SYSTEMIC_RISK_CORRELATION_THRESHOLD: z.coerce.number().min(0).max(1).default(0.3),
   MAIL_TRANSPORT_MODE: z.enum(["stub", "smtp"]).default("stub"),
   MAIL_FROM_ADDRESS: z.string().default("notifications@invoicelift.local"),
+  KYC_PROVIDER_MODE: z.enum(["stub"]).default("stub"),
+  KYC_CREDENTIAL_VALIDITY_DAYS: z.coerce.number().int().positive().default(365),
+  KYC_REFRESH_WINDOW_DAYS: z.coerce.number().int().positive().default(7),
 });
 
 const raw = schema.parse(process.env);
@@ -61,6 +64,9 @@ export const config = {
   systemicRiskCorrelationThreshold: raw.SYSTEMIC_RISK_CORRELATION_THRESHOLD,
   mailTransportMode: raw.MAIL_TRANSPORT_MODE,
   mailFromAddress: raw.MAIL_FROM_ADDRESS,
+  kycProviderMode: raw.KYC_PROVIDER_MODE,
+  kycCredentialValidityDays: raw.KYC_CREDENTIAL_VALIDITY_DAYS,
+  kycRefreshWindowDays: raw.KYC_REFRESH_WINDOW_DAYS,
 };
 
 // Contribution check by johndoedev at 2024-11-08T05:55:51

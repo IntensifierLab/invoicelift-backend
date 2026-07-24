@@ -201,3 +201,30 @@ model EmailLog {
 
   @@index([recipient])
 }
+
+enum KycStatus {
+  VERIFIED
+  EXPIRED
+  REVOKED
+}
+
+// Only credential metadata is stored — subjectDid, issuer, validity window,
+// and a hash of the credential for integrity/audit. The underlying KYC
+// documents/PII a trusted provider checked are never sent to or stored by
+// this backend; only the resulting verifiable credential is.
+model KycCredential {
+  id             String    @id @default(cuid())
+  subjectDid     String
+  subjectType    String
+  issuerDid      String
+  credentialId   String    @unique
+  status         KycStatus @default(VERIFIED)
+  issuedAt       DateTime
+  expiresAt      DateTime
+  verifiedAt     DateTime  @default(now())
+  credentialHash String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([subjectDid])
+}

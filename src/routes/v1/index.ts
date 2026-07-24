@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { auditRoutes } from "./audit.js";
 import { drawdownRoutes } from "./drawdowns.js";
 import { invoiceRoutes } from "./invoices.js";
+import { kycRoutes } from "./kyc.js";
 import { poolRoutes } from "./pools.js";
 import { riskAnalyticsRoutes } from "./riskAnalytics.js";
 import { notificationRoutes } from "./notifications.js";
@@ -23,6 +24,7 @@ export const v1Routes: FastifyPluginAsync = async (app) => {
   await app.register(poolRoutes);
   await app.register(riskAnalyticsRoutes);
   await app.register(notificationRoutes);
+  await app.register(kycRoutes);
 
   // TODO: routes for webhook ingestion, admin ops
   await app.register(delinquencyRoutes);
