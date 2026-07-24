@@ -35,6 +35,14 @@ const schema = z.object({
   KYC_PROVIDER_MODE: z.enum(["stub"]).default("stub"),
   KYC_CREDENTIAL_VALIDITY_DAYS: z.coerce.number().int().positive().default(365),
   KYC_REFRESH_WINDOW_DAYS: z.coerce.number().int().positive().default(7),
+  XERO_CLIENT_ID: z.string().optional(),
+  XERO_CLIENT_SECRET: z.string().optional(),
+  XERO_REDIRECT_URI: z.string().optional(),
+  XERO_WEBHOOK_KEY: z.string().optional(),
+  QUICKBOOKS_CLIENT_ID: z.string().optional(),
+  QUICKBOOKS_CLIENT_SECRET: z.string().optional(),
+  QUICKBOOKS_REDIRECT_URI: z.string().optional(),
+  QUICKBOOKS_WEBHOOK_VERIFIER_TOKEN: z.string().optional(),
 });
 
 const raw = schema.parse(process.env);
@@ -67,6 +75,14 @@ export const config = {
   kycProviderMode: raw.KYC_PROVIDER_MODE,
   kycCredentialValidityDays: raw.KYC_CREDENTIAL_VALIDITY_DAYS,
   kycRefreshWindowDays: raw.KYC_REFRESH_WINDOW_DAYS,
+  xeroClientId: raw.XERO_CLIENT_ID,
+  xeroClientSecret: raw.XERO_CLIENT_SECRET,
+  xeroRedirectUri: raw.XERO_REDIRECT_URI,
+  xeroWebhookKey: raw.XERO_WEBHOOK_KEY,
+  quickbooksClientId: raw.QUICKBOOKS_CLIENT_ID,
+  quickbooksClientSecret: raw.QUICKBOOKS_CLIENT_SECRET,
+  quickbooksRedirectUri: raw.QUICKBOOKS_REDIRECT_URI,
+  quickbooksWebhookVerifierToken: raw.QUICKBOOKS_WEBHOOK_VERIFIER_TOKEN,
 };
 
 // Contribution check by johndoedev at 2024-11-08T05:55:51

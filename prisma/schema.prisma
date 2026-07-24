@@ -48,6 +48,9 @@ enum InvoiceAuditAction {
   BUYER_SIGNATURE_REJECTED
   VERIFICATION_COMPLETED
   VERIFICATION_EXPIRED
+  INVOICE_AUTO_IMPORTED
+  INVOICE_SYNC_UPDATED
+  INVOICE_SYNC_FLAGGED
 }
 
 // Stand-in for the on-chain pool-manager contract state until a real Soroban reader exists.
@@ -227,4 +230,28 @@ model KycCredential {
   updatedAt      DateTime  @updatedAt
 
   @@index([subjectDid])
+}
+
+enum AccountingProvider {
+  XERO
+  QUICKBOOKS
+}
+
+// One row per SME's connected accounting integration. Tokens are stored as
+// received from the provider (this scaffold has no secrets-management
+// integration yet) — see accountingIntegrationService.ts for the encrypt-at-
+// rest follow-up note.
+model AccountingConnection {
+  id               String             @id @default(cuid())
+  smeAddress       String
+  provider         AccountingProvider
+  externalTenantId String
+  accessToken      String
+  refreshToken     String
+  expiresAt        DateTime
+  connectedAt      DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@unique([smeAddress, provider])
+  @@index([provider])
 }
