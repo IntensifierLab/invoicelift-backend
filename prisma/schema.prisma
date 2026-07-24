@@ -153,3 +153,45 @@ model InvoiceAuditEntry {
 
   @@index([invoiceId])
 }
+
+enum NotificationEventType {
+  INVOICE_VERIFIED
+  POOL_JOINED
+  REPAYMENT_RECEIVED
+  DEFAULT_FLAGGED
+}
+
+enum EmailStatus {
+  SENT
+  FAILED
+  BOUNCED
+  SKIPPED_PREFERENCE
+}
+
+// Per-recipient opt-in/out for each notification event type, keyed by email
+// address rather than a User id — this scaffold has no User model yet, and
+// SMEs/lenders are otherwise identified by on-chain address, not email.
+model NotificationPreference {
+  id                String   @id @default(cuid())
+  recipient         String   @unique
+  invoiceVerified   Boolean  @default(true)
+  poolJoined        Boolean  @default(true)
+  repaymentReceived Boolean  @default(true)
+  defaultFlagged    Boolean  @default(true)
+  hasBounced        Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model EmailLog {
+  id                String                @id @default(cuid())
+  recipient         String
+  eventType         NotificationEventType
+  status            EmailStatus
+  subject           String
+  providerMessageId String?               @unique
+  bounceReason      String?
+  createdAt         DateTime              @default(now())
+
+  @@index([recipient])
+}

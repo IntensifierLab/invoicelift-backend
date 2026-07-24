@@ -27,6 +27,8 @@ const schema = z.object({
     .transform((v) => v === "true"),
   GOVERNANCE_MIN_POOL_CAPITAL: z.coerce.number().int().positive().default(1),
   GOVERNANCE_MAX_POOL_CAPITAL: z.coerce.number().int().positive().default(100_000_000),
+  MAIL_TRANSPORT_MODE: z.enum(["stub", "smtp"]).default("stub"),
+  MAIL_FROM_ADDRESS: z.string().default("notifications@invoicelift.local"),
 });
 
 const raw = schema.parse(process.env);
@@ -51,6 +53,8 @@ export const config = {
   enableInvoiceTimeoutMonitor: raw.ENABLE_INVOICE_TIMEOUT_MONITOR,
   governanceMinPoolCapital: raw.GOVERNANCE_MIN_POOL_CAPITAL,
   governanceMaxPoolCapital: raw.GOVERNANCE_MAX_POOL_CAPITAL,
+  mailTransportMode: raw.MAIL_TRANSPORT_MODE,
+  mailFromAddress: raw.MAIL_FROM_ADDRESS,
 };
 
 // Contribution check by johndoedev at 2024-11-08T05:55:51
