@@ -165,10 +165,15 @@ Copy [`.env.example`](./.env.example) before local development; it lists every e
 | ------ | ---- | ----------- |
 | GET | `/health` | Liveness for load balancers & CI |
 | GET | `/api/v1/meta` | Service name / version |
+| POST | `/api/v1/invoices` | Create an invoice awaiting SME signature |
+| GET | `/api/v1/invoices` | List invoices, optionally filtered by `status` |
+| GET | `/api/v1/invoices/:id` | Fetch a single invoice |
+| POST | `/api/v1/invoices/:id/sme-signature` | Submit the SME's Stellar signature over the invoice hash |
+| POST | `/api/v1/invoices/:id/buyer-signature` | Submit the anchor buyer's Stellar signature over the invoice hash |
+| GET | `/api/v1/invoices/:id/audit` | Full verification audit trail for an invoice |
 
 ### Planned themes (domain routes — implement under `src/routes/v1/`)
 
-- `POST /api/v1/invoices/verify` — buyer acknowledgement webhook.
 - `POST /api/v1/pools/:id/drawdown` — orchestrated financing request.
 - `POST /api/v1/repayments/ingest` — bank file ingestion.
 

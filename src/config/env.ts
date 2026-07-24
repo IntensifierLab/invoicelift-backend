@@ -6,6 +6,25 @@ const schema = z.object({
   PORT: z.coerce.number().default(8080),
   API_PREFIX: z.string().default("/api/v1"),
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
+  DATABASE_URL: z.string().default("file:./dev.db"),
+  MONITOR_INTERVAL_MINUTES: z.coerce.number().int().positive().default(30),
+  ENABLE_FACILITY_MONITOR: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
+  REINSURER_CLIENT_MODE: z.enum(["stub", "http"]).default("stub"),
+  ONCHAIN_CLIENT_MODE: z.enum(["stub", "soroban"]).default("stub"),
+  REINSURER_API_URL: z.string().optional(),
+  REINSURER_API_KEY: z.string().optional(),
+  SOROBAN_RPC_URL: z.string().optional(),
+  SOROBAN_POOL_MANAGER_CONTRACT_ID: z.string().optional(),
+  DRAWDOWN_REQUEST_PCT: z.coerce.number().min(0).max(1).default(0.1),
+  INVOICE_VERIFICATION_TIMEOUT_DAYS: z.coerce.number().int().positive().default(7),
+  INVOICE_TIMEOUT_CHECK_INTERVAL_MINUTES: z.coerce.number().int().positive().default(60),
+  ENABLE_INVOICE_TIMEOUT_MONITOR: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
 });
 
 const raw = schema.parse(process.env);
@@ -15,6 +34,19 @@ export const config = {
   port: raw.PORT,
   apiPrefix: raw.API_PREFIX,
   corsOrigin: raw.CORS_ORIGIN,
+  databaseUrl: raw.DATABASE_URL,
+  monitorIntervalMinutes: raw.MONITOR_INTERVAL_MINUTES,
+  enableFacilityMonitor: raw.ENABLE_FACILITY_MONITOR,
+  reinsurerClientMode: raw.REINSURER_CLIENT_MODE,
+  onChainClientMode: raw.ONCHAIN_CLIENT_MODE,
+  reinsurerApiUrl: raw.REINSURER_API_URL,
+  reinsurerApiKey: raw.REINSURER_API_KEY,
+  sorobanRpcUrl: raw.SOROBAN_RPC_URL,
+  sorobanPoolManagerContractId: raw.SOROBAN_POOL_MANAGER_CONTRACT_ID,
+  drawdownRequestPct: raw.DRAWDOWN_REQUEST_PCT,
+  invoiceVerificationTimeoutDays: raw.INVOICE_VERIFICATION_TIMEOUT_DAYS,
+  invoiceTimeoutCheckIntervalMinutes: raw.INVOICE_TIMEOUT_CHECK_INTERVAL_MINUTES,
+  enableInvoiceTimeoutMonitor: raw.ENABLE_INVOICE_TIMEOUT_MONITOR,
 };
 
 // Contribution check by johndoedev at 2024-11-08T05:55:51
