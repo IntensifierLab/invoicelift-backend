@@ -13,8 +13,20 @@ export interface DrawdownConfirmation {
   raw?: unknown;
 }
 
+export interface CreatePoolOnChainInput {
+  poolId: string;
+  totalCapital: number;
+}
+
+export interface CreatePoolOnChainResult {
+  txHash: string;
+  confirmedAt: Date;
+  raw?: unknown;
+}
+
 export interface OnChainClient {
   confirmDrawdown(input: DrawdownConfirmationInput): Promise<DrawdownConfirmation>;
+  createPool(input: CreatePoolOnChainInput): Promise<CreatePoolOnChainResult>;
 }
 
 /**
@@ -33,10 +45,28 @@ export class StubOnChainClient implements OnChainClient {
       raw: { mode: "stub", ...input },
     };
   }
+
+  async createPool(input: CreatePoolOnChainInput): Promise<CreatePoolOnChainResult> {
+    const txHash = createHash("sha256")
+      .update(`create-pool:${input.poolId}:${input.totalCapital}`)
+      .digest("hex");
+
+    return {
+      txHash: `stub_${txHash}`,
+      confirmedAt: new Date(),
+      raw: { mode: "stub", ...input },
+    };
+  }
 }
 
 export class SorobanOnChainClient implements OnChainClient {
   async confirmDrawdown(): Promise<DrawdownConfirmation> {
+    throw new Error(
+      "SorobanOnChainClient is not implemented yet — set ONCHAIN_CLIENT_MODE=stub, or implement Soroban RPC integration before enabling this mode.",
+    );
+  }
+
+  async createPool(): Promise<CreatePoolOnChainResult> {
     throw new Error(
       "SorobanOnChainClient is not implemented yet — set ONCHAIN_CLIENT_MODE=stub, or implement Soroban RPC integration before enabling this mode.",
     );

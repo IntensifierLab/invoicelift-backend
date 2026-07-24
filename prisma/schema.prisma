@@ -29,6 +29,8 @@ enum AuditAction {
   CAPITAL_REQUEST_FAILED
   DRAWDOWN_CONFIRMED
   DRAWDOWN_CONFIRMATION_FAILED
+  POOL_CREATED
+  POOL_UPDATED
 }
 
 enum InvoiceStatus {
@@ -103,11 +105,15 @@ model FacilityAuditEntry {
   treaty     Treaty?     @relation(fields: [treatyId], references: [id])
   drawdownId String?
   drawdown   CapitalDrawdown? @relation(fields: [drawdownId], references: [id])
+  // Not an FK — Pool is keyed by its own poolId, and this lets pool audit
+  // entries survive independent of whether the Pool row itself still exists.
+  poolId     String?
   detail     Json
   createdAt  DateTime    @default(now())
 
   @@index([treatyId])
   @@index([drawdownId])
+  @@index([poolId])
 }
 
 model Invoice {

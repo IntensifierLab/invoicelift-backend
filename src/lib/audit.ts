@@ -5,6 +5,7 @@ export interface RecordAuditParams {
   actor: string;
   treatyId?: string;
   drawdownId?: string;
+  poolId?: string;
   detail: Record<string, unknown>;
 }
 
@@ -18,6 +19,7 @@ export async function recordAudit(
       actor: params.actor,
       treatyId: params.treatyId,
       drawdownId: params.drawdownId,
+      poolId: params.poolId,
       detail: params.detail as Prisma.InputJsonValue,
     },
   });
