@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import rateLimit from "@fastify/rate-limit";
 import { config } from "./config/env.js";
 import { startFacilityMonitor, startInvoiceTimeoutMonitor } from "./jobs/index.js";
 import { facilityDeps } from "./lib/facilityDeps.js";
@@ -11,6 +12,14 @@ export async function buildServer() {
 
   await app.register(cors, {
     origin: config.corsOrigin,
+  });
+
+  // IP-based rate limiting on public endpoints: 100 req/min per IP by
+  // default (configurable via RATE_LIMIT_MAX / RATE_LIMIT_WINDOW_MS). Replies
+  // 429 with a Retry-After header once exceeded.
+  await app.register(rateLimit, {
+    max: config.rateLimitMax,
+    timeWindow: config.rateLimitWindowMs,
   });
 
   await app.register(healthRoutes);
