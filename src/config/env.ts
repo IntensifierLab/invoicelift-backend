@@ -7,6 +7,8 @@ const schema = z.object({
   API_PREFIX: z.string().default("/api/v1"),
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
   DATABASE_URL: z.string().default("file:./dev.db"),
+  RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
   MONITOR_INTERVAL_MINUTES: z.coerce.number().int().positive().default(30),
   ENABLE_FACILITY_MONITOR: z
     .enum(["true", "false"])
@@ -53,6 +55,8 @@ export const config = {
   apiPrefix: raw.API_PREFIX,
   corsOrigin: raw.CORS_ORIGIN,
   databaseUrl: raw.DATABASE_URL,
+  rateLimitMax: raw.RATE_LIMIT_MAX,
+  rateLimitWindowMs: raw.RATE_LIMIT_WINDOW_MS,
   monitorIntervalMinutes: raw.MONITOR_INTERVAL_MINUTES,
   enableFacilityMonitor: raw.ENABLE_FACILITY_MONITOR,
   reinsurerClientMode: raw.REINSURER_CLIENT_MODE,
