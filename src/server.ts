@@ -22,6 +22,8 @@ export async function buildServer() {
   await app.register(rateLimit, {
     max: config.rateLimitMax,
     timeWindow: config.rateLimitWindowMs,
+  });
+
   await app.register(swagger, {
     openapi: {
       openapi: "3.0.0",
