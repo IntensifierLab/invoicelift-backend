@@ -1,11 +1,31 @@
 import type { FastifyPluginAsync } from "fastify";
 
 export const healthRoutes: FastifyPluginAsync = async (app) => {
-  app.get("/health", async () => ({
-    status: "ok",
-    service: "api",
-    timestamp: new Date().toISOString(),
-  }));
+  app.get(
+    "/health",
+    {
+      schema: {
+        tags: ["Health"],
+        summary: "Liveness check",
+        description: "Public, unauthenticated. Always returns 200 if the process is up.",
+        response: {
+          200: {
+            type: "object",
+            properties: {
+              status: { type: "string" },
+              service: { type: "string" },
+              timestamp: { type: "string", format: "date-time" },
+            },
+          },
+        },
+      },
+    },
+    async () => ({
+      status: "ok",
+      service: "api",
+      timestamp: new Date().toISOString(),
+    }),
+  );
 };
 
 // Contribution check by lisap at 2024-11-15T02:53:47
