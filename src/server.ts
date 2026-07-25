@@ -1,6 +1,8 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
 import { config } from "./config/env.js";
 import { startFacilityMonitor, startInvoiceTimeoutMonitor } from "./jobs/index.js";
 import { facilityDeps } from "./lib/facilityDeps.js";
@@ -20,6 +22,22 @@ export async function buildServer() {
   await app.register(rateLimit, {
     max: config.rateLimitMax,
     timeWindow: config.rateLimitWindowMs,
+  await app.register(swagger, {
+    openapi: {
+      openapi: "3.0.0",
+      info: {
+        title: "InvoiceLift API",
+        description:
+          "REST facade for Soroban contracts and indexers. No authentication is currently " +
+          "required on any endpoint — every route below is public (see rate limiting for abuse " +
+          "protection).",
+        version: "0.1.0",
+      },
+      servers: [{ url: config.apiPrefix, description: "API root" }],
+    },
+  });
+  await app.register(swaggerUi, {
+    routePrefix: "/docs",
   });
 
   await app.register(healthRoutes);
