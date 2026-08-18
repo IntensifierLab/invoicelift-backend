@@ -46,6 +46,17 @@ const templates: Record<NotificationEventType, TemplateFn> = {
       html: `<p>A repayment of <strong>${escapeHtml(amount)} ${escapeHtml(currency)}</strong> was received for ${escapeHtml(reference)}.</p>`,
     };
   },
+  REPAYMENT_REMINDER: (data) => {
+    const reference = data.reference ?? "your invoice";
+    const amount = data.amount ?? "";
+    const currency = data.currency ?? "";
+    const dueDate = data.dueDate ?? "soon";
+    return {
+      subject: `Repayment due for ${reference}`,
+      text: `A repayment of ${amount} ${currency} for ${reference} is due on ${dueDate}.`,
+      html: `<p>A repayment of <strong>${escapeHtml(amount)} ${escapeHtml(currency)}</strong> for ${escapeHtml(reference)} is due on <strong>${escapeHtml(dueDate)}</strong>.</p>`,
+    };
+  },
   DEFAULT_FLAGGED: (data) => {
     const reference = data.reference ?? "A facility";
     return {

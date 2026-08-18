@@ -4,9 +4,14 @@ import rateLimit from "@fastify/rate-limit";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
 import { config } from "./config/env.js";
-import { startFacilityMonitor, startInvoiceTimeoutMonitor } from "./jobs/index.js";
+import {
+  startFacilityMonitor,
+  startInvoiceTimeoutMonitor,
+  startRepaymentReminderMonitor,
+} from "./jobs/index.js";
 import { standardErrorHandler } from "./lib/errors.js";
 import { facilityDeps } from "./lib/facilityDeps.js";
+import { createMailTransport } from "./lib/mailer.js";
 import { healthRoutes } from "./routes/health.js";
 import { v1Routes } from "./routes/v1/index.js";
 
@@ -55,10 +60,14 @@ export async function buildServer() {
   const invoiceTimeoutMonitor = config.enableInvoiceTimeoutMonitor
     ? startInvoiceTimeoutMonitor(facilityDeps.prisma)
     : null;
+  const repaymentReminderMonitor = config.enableRepaymentReminderMonitor
+    ? startRepaymentReminderMonitor(facilityDeps.prisma, createMailTransport())
+    : null;
 
   app.addHook("onClose", async () => {
     monitor?.stop();
     invoiceTimeoutMonitor?.stop();
+    repaymentReminderMonitor?.stop();
     await facilityDeps.prisma.$disconnect();
   });
 
