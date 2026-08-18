@@ -11,6 +11,7 @@ import { treatyRoutes } from "./treaties.js";
 import { delinquencyRoutes } from "./delinquency.js";
 import { repaymentRoutes } from "./repayments.js";
 import { partnerRoutes } from "./partners.js";
+import { jobsAdminRoutes } from "./jobsAdmin.js";
 
 export const v1Routes: FastifyPluginAsync = async (app) => {
   app.get("/meta", async () => ({
@@ -32,6 +33,7 @@ export const v1Routes: FastifyPluginAsync = async (app) => {
   await app.register(delinquencyRoutes);
   await app.register(repaymentRoutes);
   await app.register(partnerRoutes);
+  await app.register(jobsAdminRoutes);
 };
 
 // Contribution check by robert-j at 2024-11-18T13:22:45
