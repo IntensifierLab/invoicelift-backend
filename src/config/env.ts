@@ -51,6 +51,14 @@ const schema = z.object({
   KYC_PROVIDER_MODE: z.enum(["stub"]).default("stub"),
   KYC_CREDENTIAL_VALIDITY_DAYS: z.coerce.number().int().positive().default(365),
   KYC_REFRESH_WINDOW_DAYS: z.coerce.number().int().positive().default(7),
+  // Stellar secret seed (S...) used to sign regulatory exports. If unset, an
+  // ephemeral keypair is generated at boot — fine for dev/test, but
+  // signatures won't be stable across restarts.
+  REGULATORY_EXPORT_SIGNING_SECRET: z.string().optional(),
+  REGULATORY_EXPORT_SCHEDULE_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
   XERO_CLIENT_ID: z.string().optional(),
   XERO_CLIENT_SECRET: z.string().optional(),
   XERO_REDIRECT_URI: z.string().optional(),
@@ -104,6 +112,8 @@ export const config = {
   kycProviderMode: raw.KYC_PROVIDER_MODE,
   kycCredentialValidityDays: raw.KYC_CREDENTIAL_VALIDITY_DAYS,
   kycRefreshWindowDays: raw.KYC_REFRESH_WINDOW_DAYS,
+  regulatoryExportSigningSecret: raw.REGULATORY_EXPORT_SIGNING_SECRET,
+  regulatoryExportScheduleEnabled: raw.REGULATORY_EXPORT_SCHEDULE_ENABLED,
   xeroClientId: raw.XERO_CLIENT_ID,
   xeroClientSecret: raw.XERO_CLIENT_SECRET,
   xeroRedirectUri: raw.XERO_REDIRECT_URI,
