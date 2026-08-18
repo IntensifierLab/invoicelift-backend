@@ -9,7 +9,6 @@ import {
   startInvoiceTimeoutMonitor,
   startRepaymentReminderMonitor,
 } from "./jobs/index.js";
-import { startFacilityMonitor, startInvoiceTimeoutMonitor } from "./jobs/index.js";
 import { standardErrorHandler } from "./lib/errors.js";
 import { facilityDeps } from "./lib/facilityDeps.js";
 import { createMailTransport } from "./lib/mailer.js";
