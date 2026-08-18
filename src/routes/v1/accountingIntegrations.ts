@@ -107,6 +107,7 @@ export const accountingIntegrationRoutes: FastifyPluginAsync = async (app) => {
       const summary = await importEligibleReceivables(
         facilityDeps.prisma,
         providerClient,
+        facilityDeps.onChainClient,
         params.data.provider as AccountingProvider,
         body.data.smeAddress,
         `${ACTOR_PREFIX}:${params.data.provider}`,

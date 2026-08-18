@@ -10,7 +10,8 @@ import {
 } from "../lib/accounting/oauthClient.js";
 import type { AccountingProviderClient } from "../lib/accounting/providerClient.js";
 import type { AccountingProvider, ExternalReceivable, OAuthTokenSet } from "../lib/accounting/types.js";
-import { createInvoice } from "./invoiceVerificationService.js";
+import type { OnChainClient } from "../lib/onChainClient.js";
+import { DuplicateInvoiceError, createInvoice } from "./invoiceVerificationService.js";
 
 export class OAuthStateError extends Error {
   constructor(message: string) {
@@ -120,6 +121,7 @@ export interface ImportSummary {
 export async function importEligibleReceivables(
   prisma: PrismaClient,
   client: AccountingProviderClient,
+  onChainClient: OnChainClient,
   provider: AccountingProvider,
   smeAddress: string,
   actor: string,
@@ -137,13 +139,14 @@ export async function importEligibleReceivables(
   const summary: ImportSummary = { created: 0, updated: 0, flaggedForReview: 0, skipped: 0 };
 
   for (const receivable of receivables) {
-    await importOne(prisma, provider, receivable, actor, summary);
+    await importOne(prisma, onChainClient, provider, receivable, actor, summary);
   }
   return summary;
 }
 
 async function importOne(
   prisma: PrismaClient,
+  onChainClient: OnChainClient,
   provider: AccountingProvider,
   receivable: ExternalReceivable,
   actor: string,
@@ -155,18 +158,32 @@ async function importOne(
 
   switch (resolution.action) {
     case "create": {
-      const invoice = await createInvoice(
-        prisma,
-        {
-          reference,
-          smeAddress: receivable.smeAddress,
-          buyerAddress: receivable.buyerAddress,
-          amount: receivable.amount,
-          currency: receivable.currency,
-          dueDate: new Date(receivable.dueDate),
-        },
-        actor,
-      );
+      let invoice;
+      try {
+        invoice = await createInvoice(
+          prisma,
+          onChainClient,
+          {
+            reference,
+            smeAddress: receivable.smeAddress,
+            buyerAddress: receivable.buyerAddress,
+            amount: receivable.amount,
+            currency: receivable.currency,
+            dueDate: new Date(receivable.dueDate),
+          },
+          actor,
+        );
+      } catch (err) {
+        // A different externalId (so resolveInvoiceConflict didn't already
+        // treat it as an update/conflict) can still collide with an existing
+        // invoice's buyer+amount+dueDate fingerprint. Skip it rather than
+        // aborting the whole batch import.
+        if (err instanceof DuplicateInvoiceError) {
+          summary.skipped += 1;
+          return;
+        }
+        throw err;
+      }
       // Supplements createInvoice's own INVOICE_CREATED entry — this one
       // records that the source was an accounting-system auto-import
       // specifically, distinct from an SME creating the invoice directly.

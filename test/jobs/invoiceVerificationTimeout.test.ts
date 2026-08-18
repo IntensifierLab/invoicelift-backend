@@ -2,10 +2,12 @@ import { PrismaClient } from "@prisma/client";
 import { Keypair } from "@stellar/stellar-sdk";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { runInvoiceTimeoutTick } from "../../src/jobs/invoiceVerificationTimeout.js";
+import { StubOnChainClient } from "../../src/lib/onChainClient.js";
 import { createInvoice, submitSmeSignature } from "../../src/services/invoiceVerificationService.js";
 import { resetDb } from "../dbHelpers.js";
 
 const prisma = new PrismaClient();
+const onChainClient = new StubOnChainClient();
 
 describe("runInvoiceTimeoutTick", () => {
   beforeEach(async () => {
@@ -22,6 +24,7 @@ describe("runInvoiceTimeoutTick", () => {
 
     const overdue = await createInvoice(
       prisma,
+      onChainClient,
       {
         reference: "job-overdue",
         smeAddress: sme.publicKey(),
@@ -44,11 +47,14 @@ describe("runInvoiceTimeoutTick", () => {
 
     const notYetDue = await createInvoice(
       prisma,
+      onChainClient,
       {
         reference: "job-not-due",
         smeAddress: sme.publicKey(),
         buyerAddress: buyer.publicKey(),
-        amount: 1000,
+        // Different amount from `overdue` above so it doesn't collide with
+        // the same buyer+amount+dueDate duplicate-detection fingerprint.
+        amount: 2000,
         dueDate: new Date("2026-12-31T00:00:00.000Z"),
       },
       "test:actor",

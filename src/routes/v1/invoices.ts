@@ -4,6 +4,7 @@ import { z } from "zod";
 import { facilityDeps } from "../../lib/facilityDeps.js";
 import { isValidStellarAddress } from "../../lib/stellarSignature.js";
 import {
+  DuplicateInvoiceError,
   InvoiceStateError,
   createInvoice,
   getInvoice,
@@ -46,11 +47,19 @@ export const invoiceRoutes: FastifyPluginAsync = async (app) => {
     }
 
     try {
-      const invoice = await createInvoice(facilityDeps.prisma, parsed.data, SME_ACTOR);
+      const invoice = await createInvoice(
+        facilityDeps.prisma,
+        facilityDeps.onChainClient,
+        parsed.data,
+        SME_ACTOR,
+      );
       return reply.status(201).send(invoice);
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
         return reply.status(409).send({ error: "Invoice reference already exists" });
+      }
+      if (err instanceof DuplicateInvoiceError) {
+        return reply.status(409).send({ error: err.message });
       }
       throw err;
     }
