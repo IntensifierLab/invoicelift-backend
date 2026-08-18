@@ -255,3 +255,22 @@ model AccountingConnection {
   @@unique([smeAddress, provider])
   @@index([provider])
 }
+
+// A registered external partner (accounting/ERP integrations, marketplace
+// consumers, etc.) authenticating via API key rather than a Stellar address.
+// Only the SHA-256 hash of the key is stored — the raw key is returned once,
+// at registration, and cannot be retrieved again.
+model Partner {
+  id           String    @id @default(cuid())
+  name         String
+  contactEmail String
+  apiKeyHash   String    @unique
+  // Fast, non-secret lookup handle so verification doesn't have to hash and
+  // compare every row: first 12 chars of the raw key, stored in the clear.
+  apiKeyPrefix String
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  revokedAt    DateTime?
+
+  @@index([apiKeyPrefix])
+}
