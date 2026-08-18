@@ -59,14 +59,13 @@ export const config = {
   nodeEnv: raw.NODE_ENV,
   port: raw.PORT,
   apiPrefix: raw.API_PREFIX,
-  corsOrigin: raw.CORS_ORIGIN,
-  logLevel: raw.LOG_LEVEL,
   // Split into a trimmed, non-empty array of explicit origins so
   // @fastify/cors rejects any origin not on the known-frontends list instead
   // of falling back to a single-string/wildcard match.
   corsOrigin: raw.CORS_ORIGIN.split(",")
     .map((origin) => origin.trim())
     .filter((origin) => origin.length > 0),
+  logLevel: raw.LOG_LEVEL,
   databaseUrl: raw.DATABASE_URL,
   rateLimitMax: raw.RATE_LIMIT_MAX,
   rateLimitWindowMs: raw.RATE_LIMIT_WINDOW_MS,
