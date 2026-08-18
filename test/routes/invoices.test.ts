@@ -40,6 +40,28 @@ describe("invoice routes", () => {
     return { res, invoice: res.json(), sme, buyer };
   }
 
+  it("returns 409 for a second submission matching an existing buyer+amount+dueDate fingerprint", async () => {
+    const buyer = Keypair.random();
+    const payload = {
+      reference: "http-dup-original",
+      smeAddress: Keypair.random().publicKey(),
+      buyerAddress: buyer.publicKey(),
+      amount: 7_500,
+      currency: "USD",
+      dueDate: "2027-04-01T00:00:00.000Z",
+    };
+
+    const first = await app.inject({ method: "POST", url: "/api/v1/invoices", payload });
+    expect(first.statusCode).toBe(201);
+
+    const second = await app.inject({
+      method: "POST",
+      url: "/api/v1/invoices",
+      payload: { ...payload, reference: "http-dup-attempt", smeAddress: Keypair.random().publicKey() },
+    });
+    expect(second.statusCode).toBe(409);
+  });
+
   it("creates and fetches an invoice via HTTP", async () => {
     const { res, invoice } = await createInvoiceViaHttp("http-basic");
     expect(res.statusCode).toBe(201);

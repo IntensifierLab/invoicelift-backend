@@ -149,6 +149,9 @@ model Invoice {
   @@index([verificationDeadline])
   @@index([poolId])
   @@index([buyerAddress])
+  // Backs the duplicate-submission fingerprint check (buyer + amount + due
+  // date) in createInvoice, so it's an indexed lookup rather than a scan.
+  @@index([buyerAddress, amount, dueDate])
 }
 
 model InvoiceAuditEntry {
