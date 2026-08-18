@@ -1,6 +1,14 @@
 import { config } from "./config/env.js";
+import { runPendingMigrations } from "./lib/migrate.js";
 import { registerGracefulShutdown } from "./lib/gracefulShutdown.js";
 import { buildServer } from "./server.js";
+
+try {
+  runPendingMigrations();
+} catch (err) {
+  console.error(err);
+  process.exit(1);
+}
 
 buildServer()
   .then((app) => {
