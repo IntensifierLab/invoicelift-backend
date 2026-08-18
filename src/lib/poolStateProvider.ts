@@ -33,3 +33,55 @@ export class DbPoolStateProvider implements PoolStateProvider {
     };
   }
 }
+
+interface CacheEntry {
+  value: PoolState;
+  expiresAt: number;
+}
+
+/**
+ * Wraps another PoolStateProvider with a short-lived, per-poolId TTL cache.
+ * `DbPoolStateProvider` is a local stand-in today, but this decorator exists
+ * for when it's swapped for a real Soroban RPC/contract reader — those reads
+ * are comparatively expensive and rate-limited, and pool utilisation doesn't
+ * need to be read fresh on every request (risk-analytics and drawdown
+ * endpoints call it far more often than the underlying state actually
+ * changes). A failed underlying read is never cached, and evicts any stale
+ * entry for that poolId so the next call retries against the source rather
+ * than being stuck failing silently until TTL expiry.
+ */
+export class CachedPoolStateProvider implements PoolStateProvider {
+  private readonly cache = new Map<string, CacheEntry>();
+
+  constructor(
+    private readonly inner: PoolStateProvider,
+    private readonly ttlMs: number,
+    private readonly now: () => number = Date.now,
+  ) {}
+
+  async getPoolState(poolId: string): Promise<PoolState> {
+    const cached = this.cache.get(poolId);
+    const nowMs = this.now();
+    if (cached && cached.expiresAt > nowMs) {
+      return cached.value;
+    }
+
+    try {
+      const value = await this.inner.getPoolState(poolId);
+      this.cache.set(poolId, { value, expiresAt: nowMs + this.ttlMs });
+      return value;
+    } catch (err) {
+      this.cache.delete(poolId);
+      throw err;
+    }
+  }
+
+  /** Drops one poolId's cached entry (or the whole cache) so the next read is forced fresh. */
+  invalidate(poolId?: string): void {
+    if (poolId) {
+      this.cache.delete(poolId);
+    } else {
+      this.cache.clear();
+    }
+  }
+}

@@ -2,7 +2,9 @@ import { PrismaClient } from "@prisma/client";
 import { Keypair } from "@stellar/stellar-sdk";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { computeInvoiceHashHex } from "../../src/lib/invoiceHash.js";
+import { StubOnChainClient } from "../../src/lib/onChainClient.js";
 import {
+  DuplicateInvoiceError,
   InvoiceStateError,
   createInvoice,
   expireOverdueInvoices,
@@ -13,20 +15,27 @@ import {
 import { resetDb } from "../dbHelpers.js";
 
 const prisma = new PrismaClient();
+const onChainClient = new StubOnChainClient();
 
-async function createTestInvoice(overrides: { reference: string }) {
+async function createTestInvoice(overrides: {
+  reference: string;
+  buyerAddress?: string;
+  amount?: number;
+  dueDate?: Date;
+}) {
   const sme = Keypair.random();
   const buyer = Keypair.random();
 
   const invoice = await createInvoice(
     prisma,
+    onChainClient,
     {
       reference: overrides.reference,
       smeAddress: sme.publicKey(),
-      buyerAddress: buyer.publicKey(),
-      amount: 5000,
+      buyerAddress: overrides.buyerAddress ?? buyer.publicKey(),
+      amount: overrides.amount ?? 5000,
       currency: "USD",
-      dueDate: new Date("2026-12-31T00:00:00.000Z"),
+      dueDate: overrides.dueDate ?? new Date("2026-12-31T00:00:00.000Z"),
     },
     "test:actor",
   );
@@ -61,6 +70,52 @@ describe("invoiceVerificationService", () => {
     const entries = await prisma.invoiceAuditEntry.findMany({ where: { invoiceId: invoice.id } });
     expect(entries).toHaveLength(1);
     expect(entries[0].action).toBe("INVOICE_CREATED");
+  });
+
+  it("triggers create_invoice on-chain and records the tx hash on a clean submission", async () => {
+    const { invoice } = await createTestInvoice({ reference: "inv-onchain" });
+
+    const entries = await prisma.invoiceAuditEntry.findMany({
+      where: { invoiceId: invoice.id, action: "INVOICE_CREATED" },
+    });
+    const detail = entries[0].detail as { onChainTxHash?: string };
+    expect(detail.onChainTxHash).toMatch(/^stub_[0-9a-f]{64}$/);
+  });
+
+  it("rejects a second submission matching an existing buyer+amount+dueDate fingerprint with 409-worthy DuplicateInvoiceError", async () => {
+    const buyer = Keypair.random().publicKey();
+    const dueDate = new Date("2027-01-15T00:00:00.000Z");
+
+    await createTestInvoice({ reference: "inv-dup-original", buyerAddress: buyer, amount: 12_000, dueDate });
+
+    await expect(
+      createTestInvoice({ reference: "inv-dup-attempt", buyerAddress: buyer, amount: 12_000, dueDate }),
+    ).rejects.toThrow(DuplicateInvoiceError);
+
+    // The duplicate must not have been persisted.
+    const all = await prisma.invoice.findMany({ where: { buyerAddress: buyer } });
+    expect(all).toHaveLength(1);
+    expect(all[0].reference).toBe("inv-dup-original");
+  });
+
+  it("allows a resubmission that differs in buyer, amount, or due date", async () => {
+    const buyer = Keypair.random().publicKey();
+    const dueDate = new Date("2027-02-01T00:00:00.000Z");
+
+    await createTestInvoice({ reference: "inv-distinct-a", buyerAddress: buyer, amount: 1000, dueDate });
+    // Different amount -> not a duplicate.
+    await expect(
+      createTestInvoice({ reference: "inv-distinct-b", buyerAddress: buyer, amount: 2000, dueDate }),
+    ).resolves.toBeDefined();
+    // Different due date -> not a duplicate.
+    await expect(
+      createTestInvoice({
+        reference: "inv-distinct-c",
+        buyerAddress: buyer,
+        amount: 1000,
+        dueDate: new Date("2027-03-01T00:00:00.000Z"),
+      }),
+    ).resolves.toBeDefined();
   });
 
   it("transitions to PENDING_BUYER_SIGNATURE on a valid SME signature", async () => {

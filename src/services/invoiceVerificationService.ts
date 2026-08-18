@@ -3,12 +3,30 @@ import { config } from "../config/env.js";
 import { recordInvoiceAudit } from "../lib/invoiceAudit.js";
 import { logger } from "../lib/logger.js";
 import { computeInvoiceHashHex } from "../lib/invoiceHash.js";
+import type { OnChainClient } from "../lib/onChainClient.js";
 import { verifyInvoiceSignature } from "../lib/stellarSignature.js";
 
 export class InvoiceStateError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "InvoiceStateError";
+  }
+}
+
+/**
+ * Thrown when an invoice with the same buyer + amount + due date
+ * fingerprint already exists in the registry (regardless of `reference`,
+ * which has its own separate uniqueness constraint at the DB level).
+ */
+export class DuplicateInvoiceError extends Error {
+  readonly existingInvoiceId: string;
+
+  constructor(existingInvoiceId: string) {
+    super(
+      `An invoice for this buyer, amount, and due date already exists (id: ${existingInvoiceId})`,
+    );
+    this.name = "DuplicateInvoiceError";
+    this.existingInvoiceId = existingInvoiceId;
   }
 }
 
@@ -29,9 +47,21 @@ export interface SignatureResult {
 
 export async function createInvoice(
   prisma: PrismaClient,
+  onChainClient: OnChainClient,
   input: CreateInvoiceInput,
   actor: string,
 ): Promise<Invoice> {
+  const duplicate = await prisma.invoice.findFirst({
+    where: {
+      buyerAddress: input.buyerAddress,
+      amount: input.amount,
+      dueDate: input.dueDate,
+    },
+  });
+  if (duplicate) {
+    throw new DuplicateInvoiceError(duplicate.id);
+  }
+
   const currency = input.currency ?? "USD";
   const invoiceHash = computeInvoiceHashHex({
     reference: input.reference,
@@ -55,6 +85,14 @@ export async function createInvoice(
     },
   });
 
+  const onChain = await onChainClient.createInvoice({
+    invoiceId: invoice.id,
+    invoiceHash,
+    smeAddress: input.smeAddress,
+    buyerAddress: input.buyerAddress,
+    amount: input.amount,
+  });
+
   await recordInvoiceAudit(prisma, {
     action: "INVOICE_CREATED",
     actor,
@@ -67,6 +105,7 @@ export async function createInvoice(
       currency,
       dueDate: input.dueDate.toISOString(),
       invoiceHash,
+      onChainTxHash: onChain.txHash,
     },
   });
 

@@ -96,7 +96,7 @@ describe("accountingIntegrationService", () => {
 
   it("importEligibleReceivables throws when there's no connection", async () => {
     await expect(
-      importEligibleReceivables(prisma, new FakeProviderClient([]), "xero", SME_ADDRESS, ACTOR),
+      importEligibleReceivables(prisma, new FakeProviderClient([]), facilityDeps.onChainClient, "xero", SME_ADDRESS, ACTOR),
     ).rejects.toBeInstanceOf(ConnectionNotFoundError);
   });
 
@@ -116,7 +116,7 @@ describe("accountingIntegrationService", () => {
       },
     ]);
 
-    const summary = await importEligibleReceivables(prisma, client, "xero", SME_ADDRESS, ACTOR);
+    const summary = await importEligibleReceivables(prisma, client, facilityDeps.onChainClient, "xero", SME_ADDRESS, ACTOR);
     expect(summary).toEqual({ created: 1, updated: 0, flaggedForReview: 0, skipped: 0 });
 
     const invoice = await prisma.invoice.findUnique({ where: { reference: "xero:INV-1" } });
@@ -141,10 +141,10 @@ describe("accountingIntegrationService", () => {
     };
     const client = new FakeProviderClient([receivable]);
 
-    const first = await importEligibleReceivables(prisma, client, "xero", SME_ADDRESS, ACTOR);
+    const first = await importEligibleReceivables(prisma, client, facilityDeps.onChainClient, "xero", SME_ADDRESS, ACTOR);
     expect(first.created).toBe(1);
 
-    const second = await importEligibleReceivables(prisma, client, "xero", SME_ADDRESS, ACTOR);
+    const second = await importEligibleReceivables(prisma, client, facilityDeps.onChainClient, "xero", SME_ADDRESS, ACTOR);
     expect(second).toEqual({ created: 0, updated: 0, flaggedForReview: 0, skipped: 1 });
 
     const invoices = await prisma.invoice.findMany({ where: { reference: "xero:INV-2" } });
@@ -166,7 +166,7 @@ describe("accountingIntegrationService", () => {
         paid: false,
       },
     ]);
-    await importEligibleReceivables(prisma, client, "xero", SME_ADDRESS, ACTOR);
+    await importEligibleReceivables(prisma, client, facilityDeps.onChainClient, "xero", SME_ADDRESS, ACTOR);
 
     const invoice = await prisma.invoice.findUnique({ where: { reference: "xero:INV-3" } });
     await prisma.invoice.update({ where: { id: invoice!.id }, data: { status: "VERIFIED" } });
@@ -182,7 +182,7 @@ describe("accountingIntegrationService", () => {
         paid: false,
       },
     ]);
-    const summary = await importEligibleReceivables(prisma, changedClient, "xero", SME_ADDRESS, ACTOR);
+    const summary = await importEligibleReceivables(prisma, changedClient, facilityDeps.onChainClient, "xero", SME_ADDRESS, ACTOR);
     expect(summary).toEqual({ created: 0, updated: 0, flaggedForReview: 1, skipped: 0 });
 
     const unchanged = await prisma.invoice.findUnique({ where: { reference: "xero:INV-3" } });

@@ -1,7 +1,15 @@
 import { config } from "./config/env.js";
-import { logger } from "./lib/logger.js";
 import { registerGracefulShutdown } from "./lib/gracefulShutdown.js";
+import { logger } from "./lib/logger.js";
+import { runPendingMigrations } from "./lib/migrate.js";
 import { buildServer } from "./server.js";
+
+try {
+  runPendingMigrations();
+} catch (err) {
+  logger.error({ err }, "Database migration failed during startup");
+  process.exit(1);
+}
 
 buildServer()
   .then((app) => {
