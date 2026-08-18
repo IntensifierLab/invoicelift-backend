@@ -5,6 +5,9 @@ const schema = z.object({
   NODE_ENV: z.string().default("development"),
   PORT: z.coerce.number().default(8080),
   API_PREFIX: z.string().default("/api/v1"),
+  // Comma-separated allow-list of known frontend origins (dev/staging/prod all
+  // set their own value via env — no wildcard default). Fastify CORS handles
+  // preflight (OPTIONS) automatically for any origin in this list.
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
@@ -58,6 +61,12 @@ export const config = {
   apiPrefix: raw.API_PREFIX,
   corsOrigin: raw.CORS_ORIGIN,
   logLevel: raw.LOG_LEVEL,
+  // Split into a trimmed, non-empty array of explicit origins so
+  // @fastify/cors rejects any origin not on the known-frontends list instead
+  // of falling back to a single-string/wildcard match.
+  corsOrigin: raw.CORS_ORIGIN.split(",")
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0),
   databaseUrl: raw.DATABASE_URL,
   rateLimitMax: raw.RATE_LIMIT_MAX,
   rateLimitWindowMs: raw.RATE_LIMIT_WINDOW_MS,

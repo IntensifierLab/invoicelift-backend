@@ -1,11 +1,13 @@
 import { config } from "./config/env.js";
 import { logger } from "./lib/logger.js";
+import { registerGracefulShutdown } from "./lib/gracefulShutdown.js";
 import { buildServer } from "./server.js";
 
 buildServer()
-  .then((app) =>
-    app.listen({ port: config.port, host: "0.0.0.0" }),
-  )
+  .then((app) => {
+    registerGracefulShutdown(app);
+    return app.listen({ port: config.port, host: "0.0.0.0" });
+  })
   .catch((err) => {
     logger.error({ err }, "Fatal error during startup");
     process.exit(1);
