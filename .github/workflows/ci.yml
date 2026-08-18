@@ -15,6 +15,10 @@ jobs:
           node-version: "22"
       - name: Install dependencies
         run: npm install
+      - name: Audit production dependencies (blocking on critical)
+        run: npm audit --omit=dev --audit-level=critical
+      - name: Audit all dependencies (report only)
+        run: npm audit --audit-level=moderate || true
       - name: Run migrations (test db)
         run: npx prisma migrate deploy
         env:
