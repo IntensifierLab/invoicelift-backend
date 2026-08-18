@@ -1,6 +1,7 @@
 import type { Invoice, InvoiceStatus, PrismaClient } from "@prisma/client";
 import { config } from "../config/env.js";
 import { recordInvoiceAudit } from "../lib/invoiceAudit.js";
+import { logger } from "../lib/logger.js";
 import { computeInvoiceHashHex } from "../lib/invoiceHash.js";
 import { verifyInvoiceSignature } from "../lib/stellarSignature.js";
 
@@ -221,7 +222,7 @@ export async function expireOverdueInvoices(
     try {
       expired.push(await expireInvoice(prisma, invoice, actor));
     } catch (err) {
-      console.error(`Failed to expire invoice ${invoice.id}:`, err);
+      logger.error({ err, invoiceId: invoice.id }, "Failed to expire invoice");
     }
   }
 

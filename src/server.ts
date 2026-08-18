@@ -6,11 +6,12 @@ import swaggerUi from "@fastify/swagger-ui";
 import { config } from "./config/env.js";
 import { startFacilityMonitor, startInvoiceTimeoutMonitor } from "./jobs/index.js";
 import { facilityDeps } from "./lib/facilityDeps.js";
+import { fastifyLoggerOptions } from "./lib/logger.js";
 import { healthRoutes } from "./routes/health.js";
 import { v1Routes } from "./routes/v1/index.js";
 
 export async function buildServer() {
-  const app = Fastify({ logger: true });
+  const app = Fastify({ ...fastifyLoggerOptions() });
 
   await app.register(cors, {
     origin: config.corsOrigin,

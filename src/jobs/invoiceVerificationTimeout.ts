@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { logger } from "../lib/logger.js";
 import { expireOverdueInvoices } from "../services/invoiceVerificationService.js";
 
 const TIMEOUT_JOB_ACTOR = "system:invoice-timeout-job";
@@ -12,6 +13,6 @@ export async function runInvoiceTimeoutTick(prisma: PrismaClient): Promise<void>
   try {
     await expireOverdueInvoices(prisma, TIMEOUT_JOB_ACTOR);
   } catch (err) {
-    console.error("Invoice verification timeout tick failed:", err);
+    logger.error({ err }, "Invoice verification timeout tick failed");
   }
 }

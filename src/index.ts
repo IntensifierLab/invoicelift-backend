@@ -1,4 +1,5 @@
 import { config } from "./config/env.js";
+import { logger } from "./lib/logger.js";
 import { buildServer } from "./server.js";
 
 buildServer()
@@ -6,7 +7,7 @@ buildServer()
     app.listen({ port: config.port, host: "0.0.0.0" }),
   )
   .catch((err) => {
-    console.error(err);
+    logger.error({ err }, "Fatal error during startup");
     process.exit(1);
   });
 

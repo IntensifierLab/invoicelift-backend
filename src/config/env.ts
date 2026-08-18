@@ -6,6 +6,9 @@ const schema = z.object({
   PORT: z.coerce.number().default(8080),
   API_PREFIX: z.string().default("/api/v1"),
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
+  LOG_LEVEL: z
+    .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
+    .default("info"),
   DATABASE_URL: z.string().default("file:./dev.db"),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
@@ -54,6 +57,7 @@ export const config = {
   port: raw.PORT,
   apiPrefix: raw.API_PREFIX,
   corsOrigin: raw.CORS_ORIGIN,
+  logLevel: raw.LOG_LEVEL,
   databaseUrl: raw.DATABASE_URL,
   rateLimitMax: raw.RATE_LIMIT_MAX,
   rateLimitWindowMs: raw.RATE_LIMIT_WINDOW_MS,
