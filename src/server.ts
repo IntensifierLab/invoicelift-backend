@@ -9,6 +9,8 @@ import {
   startInvoiceTimeoutMonitor,
   startRepaymentReminderMonitor,
 } from "./jobs/index.js";
+import { startFacilityMonitor, startInvoiceTimeoutMonitor } from "./jobs/index.js";
+import { standardErrorHandler } from "./lib/errors.js";
 import { facilityDeps } from "./lib/facilityDeps.js";
 import { createMailTransport } from "./lib/mailer.js";
 import { healthRoutes } from "./routes/health.js";
@@ -16,6 +18,11 @@ import { v1Routes } from "./routes/v1/index.js";
 
 export async function buildServer() {
   const app = Fastify({ logger: true });
+
+  // Normalizes every unhandled error (thrown ApiErrors, Zod validation
+  // errors, Fastify's own 4xx/5xx) into the standard `{error:{code,message,
+  // details}}` envelope, and hides internal error messages outside dev.
+  app.setErrorHandler(standardErrorHandler);
 
   await app.register(cors, {
     origin: config.corsOrigin,
