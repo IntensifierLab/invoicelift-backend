@@ -239,6 +239,52 @@ export async function listInvoiceAuditLog(prisma: PrismaClient, invoiceId: strin
   });
 }
 
+export class InvoiceAlreadyAcknowledgedError extends InvoiceStateError {
+  constructor() {
+    super("Invoice has already been acknowledged");
+  }
+}
+
+/**
+ * Records the buyer's confirmation that they received the goods/services
+ * the invoice covers. Distinct from buyerSignature, which authenticates the
+ * invoice terms pre-financing — acknowledgement happens after financing
+ * (status VERIFIED) and gives lenders a signal independent of the signature
+ * that the buyer actually received what they're being asked to repay for.
+ * Idempotent-by-rejection: a second call throws rather than silently
+ * overwriting the first acknowledgement's timestamp/note.
+ */
+export async function acknowledgeInvoice(
+  prisma: PrismaClient,
+  id: string,
+  actor: string,
+  note?: string,
+): Promise<Invoice> {
+  const invoice = await requireInvoice(prisma, id);
+
+  if (invoice.status !== "VERIFIED") {
+    throw new InvoiceStateError(`Cannot acknowledge invoice in ${invoice.status} status`);
+  }
+  if (invoice.acknowledgedAt) {
+    throw new InvoiceAlreadyAcknowledgedError();
+  }
+
+  const now = new Date();
+  const updated = await prisma.invoice.update({
+    where: { id },
+    data: { acknowledgedAt: now, acknowledgementNote: note },
+  });
+
+  await recordInvoiceAudit(prisma, {
+    action: "BUYER_ACKNOWLEDGED",
+    actor,
+    invoiceId: invoice.id,
+    detail: { acknowledgedAt: now.toISOString(), note: note ?? null },
+  });
+
+  return updated;
+}
+
 /**
  * Scans for invoices whose buyer-acknowledgement window has lapsed and
  * auto-rejects them. A single invoice's failure does not stop the batch —

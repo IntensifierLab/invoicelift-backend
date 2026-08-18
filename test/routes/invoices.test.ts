@@ -62,6 +62,23 @@ describe("invoice routes", () => {
     expect(second.statusCode).toBe(409);
   });
 
+  async function createVerifiedInvoiceViaHttp(reference: string) {
+    const { invoice, sme, buyer } = await createInvoiceViaHttp(reference);
+
+    await app.inject({
+      method: "POST",
+      url: `/api/v1/invoices/${invoice.id}/sme-signature`,
+      payload: { signature: sme.signMessage(invoice.invoiceHash).toString("base64") },
+    });
+    const buyerRes = await app.inject({
+      method: "POST",
+      url: `/api/v1/invoices/${invoice.id}/buyer-signature`,
+      payload: { signature: buyer.signMessage(invoice.invoiceHash).toString("base64") },
+    });
+
+    return { invoice: buyerRes.json(), sme, buyer };
+  }
+
   it("creates and fetches an invoice via HTTP", async () => {
     const { res, invoice } = await createInvoiceViaHttp("http-basic");
     expect(res.statusCode).toBe(201);
@@ -168,5 +185,78 @@ describe("invoice routes", () => {
     const list = res.json();
     expect(list).toHaveLength(1);
     expect(list[0].id).toBe(invoice.id);
+  });
+
+  it("acknowledges a verified invoice with a note", async () => {
+    const { invoice } = await createVerifiedInvoiceViaHttp("http-ack");
+
+    const res = await app.inject({
+      method: "POST",
+      url: `/api/v1/invoices/${invoice.id}/acknowledge`,
+      payload: { note: "received all 3 pallets" },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().acknowledgementNote).toBe("received all 3 pallets");
+    expect(res.json().acknowledgedAt).not.toBeNull();
+  });
+
+  it("acknowledges a verified invoice with no request body", async () => {
+    const { invoice } = await createVerifiedInvoiceViaHttp("http-ack-no-body");
+
+    const res = await app.inject({
+      method: "POST",
+      url: `/api/v1/invoices/${invoice.id}/acknowledge`,
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json().acknowledgedAt).not.toBeNull();
+  });
+
+  it("returns 409 acknowledging an invoice that hasn't been verified yet", async () => {
+    const { invoice } = await createInvoiceViaHttp("http-ack-too-early");
+
+    const res = await app.inject({
+      method: "POST",
+      url: `/api/v1/invoices/${invoice.id}/acknowledge`,
+    });
+
+    expect(res.statusCode).toBe(409);
+  });
+
+  it("returns 409 acknowledging the same invoice twice", async () => {
+    const { invoice } = await createVerifiedInvoiceViaHttp("http-ack-twice");
+
+    await app.inject({
+      method: "POST",
+      url: `/api/v1/invoices/${invoice.id}/acknowledge`,
+    });
+    const second = await app.inject({
+      method: "POST",
+      url: `/api/v1/invoices/${invoice.id}/acknowledge`,
+    });
+
+    expect(second.statusCode).toBe(409);
+  });
+
+  it("returns 404 acknowledging an unknown invoice", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/v1/invoices/does-not-exist/acknowledge",
+    });
+
+    expect(res.statusCode).toBe(404);
+  });
+
+  it("returns 400 for a note that is too long", async () => {
+    const { invoice } = await createVerifiedInvoiceViaHttp("http-ack-note-too-long");
+
+    const res = await app.inject({
+      method: "POST",
+      url: `/api/v1/invoices/${invoice.id}/acknowledge`,
+      payload: { note: "x".repeat(2001) },
+    });
+
+    expect(res.statusCode).toBe(400);
   });
 });

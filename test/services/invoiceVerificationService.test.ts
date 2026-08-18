@@ -5,7 +5,9 @@ import { computeInvoiceHashHex } from "../../src/lib/invoiceHash.js";
 import { StubOnChainClient } from "../../src/lib/onChainClient.js";
 import {
   DuplicateInvoiceError,
+  InvoiceAlreadyAcknowledgedError,
   InvoiceStateError,
+  acknowledgeInvoice,
   createInvoice,
   expireOverdueInvoices,
   getInvoice,
@@ -41,6 +43,18 @@ async function createTestInvoice(overrides: {
   );
 
   return { invoice, sme, buyer };
+}
+
+async function createVerifiedInvoice(overrides: { reference: string }) {
+  const { invoice, sme, buyer } = await createTestInvoice(overrides);
+  await submitSmeSignature(prisma, invoice.id, signatureFor(sme, invoice.invoiceHash), "test:actor");
+  const { invoice: verified } = await submitBuyerSignature(
+    prisma,
+    invoice.id,
+    signatureFor(buyer, invoice.invoiceHash),
+    "test:actor",
+  );
+  return { invoice: verified, sme, buyer };
 }
 
 describe("invoiceVerificationService", () => {
@@ -214,6 +228,45 @@ describe("invoiceVerificationService", () => {
       where: { invoiceId: overdue.id, action: "VERIFICATION_EXPIRED" },
     });
     expect(expiredEntries).toHaveLength(1);
+  });
+
+  it("acknowledges a verified invoice and records BUYER_ACKNOWLEDGED", async () => {
+    const { invoice } = await createVerifiedInvoice({ reference: "inv-ack" });
+
+    const acknowledged = await acknowledgeInvoice(prisma, invoice.id, "test:actor", "goods received in full");
+
+    expect(acknowledged.acknowledgedAt).not.toBeNull();
+    expect(acknowledged.acknowledgementNote).toBe("goods received in full");
+
+    const entries = await prisma.invoiceAuditEntry.findMany({
+      where: { invoiceId: invoice.id, action: "BUYER_ACKNOWLEDGED" },
+    });
+    expect(entries).toHaveLength(1);
+  });
+
+  it("allows acknowledging with no note", async () => {
+    const { invoice } = await createVerifiedInvoice({ reference: "inv-ack-no-note" });
+
+    const acknowledged = await acknowledgeInvoice(prisma, invoice.id, "test:actor");
+
+    expect(acknowledged.acknowledgedAt).not.toBeNull();
+    expect(acknowledged.acknowledgementNote).toBeNull();
+  });
+
+  it("rejects acknowledging an invoice that isn't VERIFIED yet", async () => {
+    const { invoice } = await createTestInvoice({ reference: "inv-ack-too-early" });
+
+    await expect(acknowledgeInvoice(prisma, invoice.id, "test:actor")).rejects.toThrow(InvoiceStateError);
+  });
+
+  it("rejects a second acknowledgement of the same invoice", async () => {
+    const { invoice } = await createVerifiedInvoice({ reference: "inv-ack-twice" });
+
+    await acknowledgeInvoice(prisma, invoice.id, "test:actor", "first note");
+
+    await expect(acknowledgeInvoice(prisma, invoice.id, "test:actor", "second note")).rejects.toThrow(
+      InvoiceAlreadyAcknowledgedError,
+    );
   });
 });
 
