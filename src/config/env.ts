@@ -9,6 +9,9 @@ const schema = z.object({
   // set their own value via env — no wildcard default). Fastify CORS handles
   // preflight (OPTIONS) automatically for any origin in this list.
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
+  LOG_LEVEL: z
+    .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
+    .default("info"),
   DATABASE_URL: z.string().default("file:./dev.db"),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60_000),
@@ -70,6 +73,7 @@ export const config = {
   corsOrigin: raw.CORS_ORIGIN.split(",")
     .map((origin) => origin.trim())
     .filter((origin) => origin.length > 0),
+  logLevel: raw.LOG_LEVEL,
   databaseUrl: raw.DATABASE_URL,
   rateLimitMax: raw.RATE_LIMIT_MAX,
   rateLimitWindowMs: raw.RATE_LIMIT_WINDOW_MS,

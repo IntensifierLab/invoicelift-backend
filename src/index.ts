@@ -1,12 +1,13 @@
 import { config } from "./config/env.js";
-import { runPendingMigrations } from "./lib/migrate.js";
 import { registerGracefulShutdown } from "./lib/gracefulShutdown.js";
+import { logger } from "./lib/logger.js";
+import { runPendingMigrations } from "./lib/migrate.js";
 import { buildServer } from "./server.js";
 
 try {
   runPendingMigrations();
 } catch (err) {
-  console.error(err);
+  logger.error({ err }, "Database migration failed during startup");
   process.exit(1);
 }
 
@@ -16,7 +17,7 @@ buildServer()
     return app.listen({ port: config.port, host: "0.0.0.0" });
   })
   .catch((err) => {
-    console.error(err);
+    logger.error({ err }, "Fatal error during startup");
     process.exit(1);
   });
 

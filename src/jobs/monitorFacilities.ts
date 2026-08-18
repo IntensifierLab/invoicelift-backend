@@ -1,3 +1,4 @@
+import { logger } from "../lib/logger.js";
 import { evaluateAndDraw, type DrawdownOrchestratorDeps } from "../services/drawdownOrchestrator.js";
 
 const MONITOR_ACTOR = "system:monitor-job";
@@ -14,7 +15,7 @@ export async function runMonitorTick(deps: DrawdownOrchestratorDeps): Promise<vo
     try {
       await evaluateAndDraw(treaty, deps, MONITOR_ACTOR);
     } catch (err) {
-      console.error(`Facility monitor tick failed for treaty ${treaty.id}:`, err);
+      logger.error({ err, treatyId: treaty.id }, "Facility monitor tick failed for treaty");
     }
   }
 }

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { config } from "../config/env.js";
+import { logger } from "./logger.js";
 
 export interface MailMessage {
   to: string;
@@ -25,7 +26,7 @@ export interface MailTransport {
 export class StubMailTransport implements MailTransport {
   async send(message: MailMessage): Promise<MailSendResult> {
     const providerMessageId = `stub_${randomUUID()}`;
-    console.log(`[mail:stub] -> ${message.to} :: ${message.subject} (${providerMessageId})`);
+    logger.info({ to: message.to, subject: message.subject, providerMessageId }, "mail:stub send");
     return { providerMessageId };
   }
 }
