@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { accountingIntegrationRoutes } from "./accountingIntegrations.js";
+import { privilegedAuditRoutes } from "./privilegedAudit.js";
 import { auditRoutes } from "./audit.js";
 import { drawdownRoutes } from "./drawdowns.js";
 import { invoiceRoutes } from "./invoices.js";
@@ -20,6 +21,7 @@ export const v1Routes: FastifyPluginAsync = async (app) => {
   }));
 
   await app.register(treatyRoutes);
+  await app.register(privilegedAuditRoutes);
   await app.register(drawdownRoutes);
   await app.register(auditRoutes);
   await app.register(invoiceRoutes);

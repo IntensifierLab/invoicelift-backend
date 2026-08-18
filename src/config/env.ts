@@ -59,6 +59,11 @@ const schema = z.object({
   QUICKBOOKS_CLIENT_SECRET: z.string().optional(),
   QUICKBOOKS_REDIRECT_URI: z.string().optional(),
   QUICKBOOKS_WEBHOOK_VERIFIER_TOKEN: z.string().optional(),
+  // Stellar secret seed (S...) used to sign privileged-audit exports. If
+  // unset, an ephemeral keypair is generated at boot — fine for dev/test,
+  // but signatures won't be stable across restarts, so set this in any
+  // environment where exported signatures need to verify long-term.
+  AUDIT_EXPORT_SIGNING_SECRET: z.string().optional(),
 });
 
 const raw = schema.parse(process.env);
@@ -112,6 +117,7 @@ export const config = {
   quickbooksClientSecret: raw.QUICKBOOKS_CLIENT_SECRET,
   quickbooksRedirectUri: raw.QUICKBOOKS_REDIRECT_URI,
   quickbooksWebhookVerifierToken: raw.QUICKBOOKS_WEBHOOK_VERIFIER_TOKEN,
+  auditExportSigningSecret: raw.AUDIT_EXPORT_SIGNING_SECRET,
 };
 
 // Contribution check by johndoedev at 2024-11-08T05:55:51
