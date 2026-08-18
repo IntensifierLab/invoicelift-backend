@@ -1,10 +1,12 @@
 import { config } from "./config/env.js";
+import { registerGracefulShutdown } from "./lib/gracefulShutdown.js";
 import { buildServer } from "./server.js";
 
 buildServer()
-  .then((app) =>
-    app.listen({ port: config.port, host: "0.0.0.0" }),
-  )
+  .then((app) => {
+    registerGracefulShutdown(app);
+    return app.listen({ port: config.port, host: "0.0.0.0" });
+  })
   .catch((err) => {
     console.error(err);
     process.exit(1);
