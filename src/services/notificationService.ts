@@ -13,6 +13,11 @@ const PREFERENCE_FIELD: Record<NotificationEventType, PreferenceField> = {
   INVOICE_VERIFIED: "invoiceVerified",
   POOL_JOINED: "poolJoined",
   REPAYMENT_RECEIVED: "repaymentReceived",
+  // Reminders and receipts are both repayment-lifecycle emails; reusing this
+  // toggle avoids a migration for a new preference field just for reminders.
+  // Split it into its own field if reminder/receipt opt-out ever needs to
+  // diverge.
+  REPAYMENT_REMINDER: "repaymentReceived",
   DEFAULT_FLAGGED: "defaultFlagged",
 };
 

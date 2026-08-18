@@ -27,6 +27,12 @@ const schema = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((v) => v === "true"),
+  REPAYMENT_REMINDER_DAYS_BEFORE: z.coerce.number().int().positive().default(3),
+  REPAYMENT_REMINDER_CHECK_INTERVAL_MINUTES: z.coerce.number().int().positive().default(60),
+  ENABLE_REPAYMENT_REMINDER_MONITOR: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
   GOVERNANCE_MIN_POOL_CAPITAL: z.coerce.number().int().positive().default(1),
   GOVERNANCE_MAX_POOL_CAPITAL: z.coerce.number().int().positive().default(100_000_000),
   SYSTEMIC_RISK_UTILISATION_THRESHOLD: z.coerce.number().min(0).max(1).default(0.85),
@@ -69,6 +75,9 @@ export const config = {
   invoiceVerificationTimeoutDays: raw.INVOICE_VERIFICATION_TIMEOUT_DAYS,
   invoiceTimeoutCheckIntervalMinutes: raw.INVOICE_TIMEOUT_CHECK_INTERVAL_MINUTES,
   enableInvoiceTimeoutMonitor: raw.ENABLE_INVOICE_TIMEOUT_MONITOR,
+  repaymentReminderDaysBefore: raw.REPAYMENT_REMINDER_DAYS_BEFORE,
+  repaymentReminderCheckIntervalMinutes: raw.REPAYMENT_REMINDER_CHECK_INTERVAL_MINUTES,
+  enableRepaymentReminderMonitor: raw.ENABLE_REPAYMENT_REMINDER_MONITOR,
   governanceMinPoolCapital: raw.GOVERNANCE_MIN_POOL_CAPITAL,
   governanceMaxPoolCapital: raw.GOVERNANCE_MAX_POOL_CAPITAL,
   systemicRiskUtilisationThreshold: raw.SYSTEMIC_RISK_UTILISATION_THRESHOLD,
