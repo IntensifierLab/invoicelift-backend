@@ -55,6 +55,16 @@ export interface SendNotificationInput {
   recipient: string;
   eventType: NotificationEventType;
   data?: TemplateData;
+  /**
+   * Timestamp to stamp the created EmailLog row with. Defaults to the real
+   * current time - callers that operate against an injected/mocked "now"
+   * (e.g. a reminder job under test) should pass it through here, since
+   * Prisma's schema-level `@default(now())` always uses the real database
+   * clock and would otherwise silently ignore an injected time, making
+   * same-day/next-day dedup windows drift out of sync with the caller's
+   * own notion of "now".
+   */
+  now?: Date;
 }
 
 export interface SendNotificationResult {
@@ -78,6 +88,7 @@ export async function sendNotification(
         eventType: input.eventType,
         status: "SKIPPED_PREFERENCE",
         subject: rendered.subject,
+        createdAt: input.now,
       },
     });
     return { status: log.status, emailLogId: log.id };
@@ -97,6 +108,7 @@ export async function sendNotification(
         status: "SENT",
         subject: rendered.subject,
         providerMessageId: result.providerMessageId,
+        createdAt: input.now,
       },
     });
     return { status: log.status, emailLogId: log.id };
@@ -107,6 +119,7 @@ export async function sendNotification(
         eventType: input.eventType,
         status: "FAILED",
         subject: rendered.subject,
+        createdAt: input.now,
       },
     });
     return { status: log.status, emailLogId: log.id };
