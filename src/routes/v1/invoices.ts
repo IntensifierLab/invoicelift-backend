@@ -3,6 +3,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { facilityDeps } from "../../lib/facilityDeps.js";
 import { isValidStellarAddress } from "../../lib/stellarSignature.js";
+import { sendValidationError, validateBody } from "../../lib/validation.js";
 import {
   DuplicateInvoiceError,
   InvoiceStateError,
@@ -41,9 +42,9 @@ const listQuerySchema = z.object({
 
 export const invoiceRoutes: FastifyPluginAsync = async (app) => {
   app.post("/invoices", async (req, reply) => {
-    const parsed = createInvoiceSchema.safeParse(req.body);
+    const parsed = validateBody(createInvoiceSchema, req.body);
     if (!parsed.success) {
-      return reply.status(400).send({ error: parsed.error.flatten() });
+      return sendValidationError(reply, parsed.errors);
     }
 
     try {

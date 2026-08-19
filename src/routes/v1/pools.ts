@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { facilityDeps } from "../../lib/facilityDeps.js";
+import { sendValidationError, validateBody } from "../../lib/validation.js";
 import {
   GovernanceBoundsError,
   PoolNotFoundError,
@@ -43,9 +44,9 @@ export const poolRoutes: FastifyPluginAsync = async (app) => {
       },
     },
     async (req, reply) => {
-      const parsed = createPoolSchema.safeParse(req.body);
+      const parsed = validateBody(createPoolSchema, req.body);
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.flatten() });
+        return sendValidationError(reply, parsed.errors);
       }
 
       try {
@@ -121,9 +122,9 @@ export const poolRoutes: FastifyPluginAsync = async (app) => {
     },
     async (req, reply) => {
       const { id } = req.params as { id: string };
-      const parsed = updatePoolSchema.safeParse(req.body);
+      const parsed = validateBody(updatePoolSchema, req.body);
       if (!parsed.success) {
-        return reply.status(400).send({ error: parsed.error.flatten() });
+        return sendValidationError(reply, parsed.errors);
       }
 
       try {
