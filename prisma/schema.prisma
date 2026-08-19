@@ -169,6 +169,7 @@ model Invoice {
   updatedAt            DateTime      @updatedAt
 
   auditEntries InvoiceAuditEntry[]
+  zkAttestations InvoiceZkAttestation[]
 
   @@index([status])
   @@index([verificationDeadline])
@@ -187,6 +188,28 @@ model InvoiceAuditEntry {
   invoice   Invoice             @relation(fields: [invoiceId], references: [id])
   detail    Json
   createdAt DateTime            @default(now())
+
+  @@index([invoiceId])
+}
+
+// Privacy-preserving uniqueness attestation for an invoice: `commitment`
+// hides the invoice's identifying fields (a hiding+binding commitment,
+// computed client-side — see zkInvoiceProof.ts); `nullifier` is a
+// deterministic hash of those same fields *without* the random commitment
+// salt, so the same invoice always produces the same nullifier regardless
+// of who submits it or when — that's what makes @@unique([nullifier])
+// below a real "prove uniqueness without seeing the raw data" duplicate
+// check. Neither value alone (nor together) reveals the underlying
+// invoiceReference/smeAddress/buyerAddress/amount/dueDate.
+model InvoiceZkAttestation {
+  id                 String    @id @default(cuid())
+  invoiceId          String
+  invoice            Invoice   @relation(fields: [invoiceId], references: [id])
+  commitment         String
+  nullifier          String    @unique
+  onChainTxHash      String?
+  onChainConfirmedAt DateTime?
+  createdAt          DateTime  @default(now())
 
   @@index([invoiceId])
 }
