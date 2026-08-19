@@ -53,7 +53,7 @@ describe("runMonitorTick", () => {
       prisma,
       poolStateProvider,
       reinsurerClient: new StubReinsurerClient(),
-      onChainClient: new StubOnChainClient(),
+      onChainClient: new StubOnChainClient(prisma),
     });
 
     const breachingDrawdowns = await prisma.capitalDrawdown.findMany({
@@ -99,7 +99,7 @@ describe("runMonitorTick", () => {
       prisma,
       poolStateProvider,
       reinsurerClient: new StubReinsurerClient(),
-      onChainClient: new StubOnChainClient(),
+      onChainClient: new StubOnChainClient(prisma),
     });
 
     const okDrawdowns = await prisma.capitalDrawdown.findMany({ where: { treatyId: ok.id } });

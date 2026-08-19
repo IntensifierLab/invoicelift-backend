@@ -12,5 +12,5 @@ export const facilityDeps: DrawdownOrchestratorDeps = {
     config.poolStateCacheTtlMs,
   ),
   reinsurerClient: createReinsurerClient(),
-  onChainClient: createOnChainClient(),
+  onChainClient: createOnChainClient(prisma),
 };

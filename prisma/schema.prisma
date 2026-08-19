@@ -318,6 +318,21 @@ model KycCredential {
   @@index([subjectDid])
 }
 
+// One row per reconciliation tick, comparing local DB aggregates against
+// the (stubbed, until a real Soroban reader exists) on-chain ledger
+// snapshot. `discrepancies` is empty on a clean run. See reconciliation.ts.
+model ReconciliationRun {
+  id             String   @id @default(cuid())
+  dbSnapshot     Json
+  chainSnapshot  Json
+  discrepancies  Json
+  healthy        Boolean
+  ranAt          DateTime @default(now())
+
+  @@index([healthy])
+  @@index([ranAt])
+}
+
 enum AccountingProvider {
   XERO
   QUICKBOOKS

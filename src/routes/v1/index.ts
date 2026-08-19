@@ -5,6 +5,7 @@ import { simulationRoutes } from "./simulations.js";
 import { drawdownRoutes } from "./drawdowns.js";
 import { regulatoryExportRoutes } from "./regulatoryExports.js";
 import { invoiceRoutes } from "./invoices.js";
+import { reconciliationRoutes } from "./reconciliation.js";
 import { kycRoutes } from "./kyc.js";
 import { invoiceZkProofRoutes } from "./invoiceZkProofs.js";
 import { poolRoutes } from "./pools.js";
@@ -29,6 +30,7 @@ export const v1Routes: FastifyPluginAsync = async (app) => {
   await app.register(auditRoutes);
   await app.register(regulatoryExportRoutes);
   await app.register(invoiceRoutes);
+  await app.register(reconciliationRoutes);
   await app.register(poolRoutes);
   await app.register(invoiceZkProofRoutes);
   await app.register(riskAnalyticsRoutes);

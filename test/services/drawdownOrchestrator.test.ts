@@ -47,7 +47,7 @@ describe("drawdownOrchestrator.evaluateAndDraw", () => {
         prisma,
         poolStateProvider: fakePoolStateProvider(0.5),
         reinsurerClient: new StubReinsurerClient(),
-        onChainClient: new StubOnChainClient(),
+        onChainClient: new StubOnChainClient(prisma),
       },
       "test:actor",
     );
@@ -74,7 +74,7 @@ describe("drawdownOrchestrator.evaluateAndDraw", () => {
         prisma,
         poolStateProvider: fakePoolStateProvider(0.95),
         reinsurerClient: new StubReinsurerClient(),
-        onChainClient: new StubOnChainClient(),
+        onChainClient: new StubOnChainClient(prisma),
       },
       "test:actor",
     );
@@ -122,7 +122,7 @@ describe("drawdownOrchestrator.evaluateAndDraw", () => {
         prisma,
         poolStateProvider: fakePoolStateProvider(0.95),
         reinsurerClient: throwingReinsurer,
-        onChainClient: new StubOnChainClient(),
+        onChainClient: new StubOnChainClient(prisma),
       },
       "test:actor",
     );
@@ -153,7 +153,7 @@ describe("drawdownOrchestrator.evaluateAndDraw", () => {
         prisma,
         poolStateProvider: fakePoolStateProvider(0.1),
         reinsurerClient: new StubReinsurerClient(),
-        onChainClient: new StubOnChainClient(),
+        onChainClient: new StubOnChainClient(prisma),
       },
       "test:actor",
       { force: true },
