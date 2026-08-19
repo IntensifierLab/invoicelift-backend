@@ -1,4 +1,45 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import type { FastifyPluginAsync } from "fastify";
+import { prisma } from "../lib/prisma.js";
+
+// Read once at module load rather than per-request. Read via fs rather than
+// a JSON import so this doesn't depend on tsconfig's rootDir/resolveJsonModule
+// reaching outside src/ (package.json lives at the repo root, one level
+// above rootDir).
+const packageJsonPath = fileURLToPath(new URL("../../package.json", import.meta.url));
+const { version }: { version: string } = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+
+export interface HealthStatus {
+  status: "ok" | "error";
+  version: string;
+  uptime: number;
+}
+
+/**
+ * Pure health-check logic, independent of Fastify. `ping` defaults to a
+ * real database liveness query; tests inject a rejecting `ping` to exercise
+ * the failure branch deterministically, since disconnecting/reconnecting
+ * the real (SQLite, in tests) Prisma client doesn't reliably fail a query -
+ * Prisma reconnects lazily and SQLite has no real network round trip to
+ * break.
+ */
+export async function checkHealth(
+  ping: () => Promise<unknown> = () => prisma.$queryRaw`SELECT 1`,
+): Promise<HealthStatus> {
+  const uptime = process.uptime();
+
+  try {
+    // Lightweight liveness query against the one critical dependency this
+    // service has: the database. Anything else (timeout, connection
+    // refused, etc.) throws and falls into the catch below.
+    await ping();
+  } catch {
+    return { status: "error", version, uptime };
+  }
+
+  return { status: "ok", version, uptime };
+}
 
 export const healthRoutes: FastifyPluginAsync = async (app) => {
   app.get(
@@ -7,24 +48,37 @@ export const healthRoutes: FastifyPluginAsync = async (app) => {
       schema: {
         tags: ["Health"],
         summary: "Liveness check",
-        description: "Public, unauthenticated. Always returns 200 if the process is up.",
+        description:
+          "Public, unauthenticated. Returns 200 with {status, version, uptime} if the " +
+          "process and its critical dependencies (currently: the database) are healthy, " +
+          "or 503 with the same shape (status: \"error\") if a critical dependency is down.",
         response: {
           200: {
             type: "object",
             properties: {
               status: { type: "string" },
-              service: { type: "string" },
-              timestamp: { type: "string", format: "date-time" },
+              version: { type: "string" },
+              uptime: { type: "number" },
+            },
+          },
+          503: {
+            type: "object",
+            properties: {
+              status: { type: "string" },
+              version: { type: "string" },
+              uptime: { type: "number" },
             },
           },
         },
       },
     },
-    async () => ({
-      status: "ok",
-      service: "api",
-      timestamp: new Date().toISOString(),
-    }),
+    async (_request, reply) => {
+      const result = await checkHealth();
+      if (result.status === "error") {
+        reply.code(503);
+      }
+      return result;
+    },
   );
 };
 
