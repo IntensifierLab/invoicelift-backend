@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { PrismaClient } from "@prisma/client";
 import { config } from "../config/env.js";
 
 export interface DrawdownConfirmationInput {
@@ -38,10 +39,18 @@ export interface CreateInvoiceOnChainResult {
   raw?: unknown;
 }
 
+export interface LedgerSnapshot {
+  invoiceCount: number;
+  poolTvl: number;
+  repaymentTotal: number;
+}
+
 export interface OnChainClient {
   confirmDrawdown(input: DrawdownConfirmationInput): Promise<DrawdownConfirmation>;
   createPool(input: CreatePoolOnChainInput): Promise<CreatePoolOnChainResult>;
   createInvoice(input: CreateInvoiceOnChainInput): Promise<CreateInvoiceOnChainResult>;
+  /** Aggregate on-chain state for reconciliation against the local DB. See reconciliation.ts. */
+  getLedgerSnapshot(): Promise<LedgerSnapshot>;
 }
 
 /**
@@ -49,6 +58,34 @@ export interface OnChainClient {
  * testable without a live Soroban RPC connection or deployed contract.
  */
 export class StubOnChainClient implements OnChainClient {
+  constructor(private readonly prisma: PrismaClient) {}
+
+  /**
+   * No real chain exists yet, so there is no independent second source to
+   * read from. Echoing the DB's own aggregates (zero drift by default) is
+   * the honest stub behaviour — it exercises the full reconciliation path
+   * (see reconciliation.ts) without fabricating discrepancies. Tests that
+   * need to exercise the discrepancy/self-heal paths construct their own
+   * fake OnChainClient with deliberately injected drift instead of relying
+   * on this stub.
+   */
+  async getLedgerSnapshot(): Promise<LedgerSnapshot> {
+    const [invoiceCount, pools, confirmedDrawdowns] = await Promise.all([
+      this.prisma.invoice.count(),
+      this.prisma.pool.findMany({ select: { totalCapital: true } }),
+      this.prisma.capitalDrawdown.findMany({
+        where: { status: "CONFIRMED" },
+        select: { amountRequested: true },
+      }),
+    ]);
+
+    return {
+      invoiceCount,
+      poolTvl: pools.reduce((sum, p) => sum + p.totalCapital, 0),
+      repaymentTotal: confirmedDrawdowns.reduce((sum, d) => sum + d.amountRequested, 0),
+    };
+  }
+
   async confirmDrawdown(input: DrawdownConfirmationInput): Promise<DrawdownConfirmation> {
     const txHash = createHash("sha256")
       .update(`${input.poolId}:${input.drawdownId}:${input.amount}`)
@@ -104,14 +141,20 @@ export class SorobanOnChainClient implements OnChainClient {
       "SorobanOnChainClient is not implemented yet — set ONCHAIN_CLIENT_MODE=stub, or implement Soroban RPC integration before enabling this mode.",
     );
   }
+
+  async getLedgerSnapshot(): Promise<LedgerSnapshot> {
+    throw new Error(
+      "SorobanOnChainClient is not implemented yet — set ONCHAIN_CLIENT_MODE=stub, or implement Soroban RPC integration before enabling this mode.",
+    );
+  }
 }
 
-export function createOnChainClient(): OnChainClient {
+export function createOnChainClient(prisma: PrismaClient): OnChainClient {
   switch (config.onChainClientMode) {
     case "soroban":
       return new SorobanOnChainClient();
     case "stub":
     default:
-      return new StubOnChainClient();
+      return new StubOnChainClient(prisma);
   }
 }

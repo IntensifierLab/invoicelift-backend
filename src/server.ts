@@ -9,6 +9,7 @@ import {
   startInvoiceTimeoutMonitor,
   startRepaymentReminderMonitor,
 } from "./jobs/index.js";
+import { startLedgerReconciliationMonitor } from "./jobs/ledgerReconciliation.js";
 import { standardErrorHandler } from "./lib/errors.js";
 import { facilityDeps } from "./lib/facilityDeps.js";
 import { fastifyLoggerOptions } from "./lib/logger.js";
@@ -64,8 +65,16 @@ export async function buildServer() {
   const repaymentReminderMonitor = config.enableRepaymentReminderMonitor
     ? startRepaymentReminderMonitor(facilityDeps.prisma, createMailTransport())
     : null;
+  const reconciliationMonitor = config.enableLedgerReconciliation
+    ? startLedgerReconciliationMonitor(
+        facilityDeps.prisma,
+        facilityDeps.onChainClient,
+        config.ledgerReconciliationIntervalMinutes,
+      )
+    : null;
 
   app.addHook("onClose", async () => {
+    reconciliationMonitor?.stop();
     monitor?.stop();
     invoiceTimeoutMonitor?.stop();
     repaymentReminderMonitor?.stop();

@@ -28,6 +28,11 @@ const schema = z.object({
   SOROBAN_RPC_URL: z.string().optional(),
   SOROBAN_POOL_MANAGER_CONTRACT_ID: z.string().optional(),
   STELLAR_EVENT_SOURCE_MODE: z.enum(["stub", "soroban"]).default("stub"),
+  ENABLE_LEDGER_RECONCILIATION: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((v) => v === "true"),
+  LEDGER_RECONCILIATION_INTERVAL_MINUTES: z.coerce.number().int().positive().default(15),
   DRAWDOWN_REQUEST_PCT: z.coerce.number().min(0).max(1).default(0.1),
   INVOICE_VERIFICATION_TIMEOUT_DAYS: z.coerce.number().int().positive().default(7),
   INVOICE_TIMEOUT_CHECK_INTERVAL_MINUTES: z.coerce.number().int().positive().default(60),
@@ -87,6 +92,8 @@ export const config = {
   sorobanRpcUrl: raw.SOROBAN_RPC_URL,
   sorobanPoolManagerContractId: raw.SOROBAN_POOL_MANAGER_CONTRACT_ID,
   stellarEventSourceMode: raw.STELLAR_EVENT_SOURCE_MODE,
+  enableLedgerReconciliation: raw.ENABLE_LEDGER_RECONCILIATION,
+  ledgerReconciliationIntervalMinutes: raw.LEDGER_RECONCILIATION_INTERVAL_MINUTES,
   drawdownRequestPct: raw.DRAWDOWN_REQUEST_PCT,
   invoiceVerificationTimeoutDays: raw.INVOICE_VERIFICATION_TIMEOUT_DAYS,
   invoiceTimeoutCheckIntervalMinutes: raw.INVOICE_TIMEOUT_CHECK_INTERVAL_MINUTES,
