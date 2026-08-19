@@ -62,6 +62,31 @@ model Pool {
   updatedAt       DateTime @updatedAt
 }
 
+// One row per Monte Carlo drawdown simulation run. The full loss
+// distribution is stored as Json so the chart endpoint can re-bucket it
+// without re-running the simulation; `trials` is typically 10k values,
+// small enough for SQLite's Json column at this scaffold's scale.
+model SimulationRun {
+  id                      String   @id @default(cuid())
+  poolId                  String?
+  defaultRate             Float
+  correlation             Float
+  poolSize                Int
+  feePct                  Float
+  lossGivenDefault        Float
+  trials                  Int
+  confidenceLevel         Float
+  seed                    Int
+  valueAtRisk             Float
+  conditionalValueAtRisk  Float
+  maxDrawdown             Float
+  lenderNetReturn         Float
+  lossDistribution        Json
+  createdAt               DateTime @default(now())
+
+  @@index([poolId])
+}
+
 model Treaty {
   id               String   @id @default(cuid())
   poolId           String
@@ -207,6 +232,40 @@ model EmailLog {
   createdAt         DateTime              @default(now())
 
   @@index([recipient])
+}
+
+enum RegulatoryReportType {
+  INVOICE_VOLUME
+  DEFAULT_RATE
+  POOL_UTILISATION
+  WATERFALL_DISTRIBUTION
+}
+
+enum RegulatoryExportFormat {
+  CSV
+  JSON
+  PDF
+}
+
+// One row per generated regulatory export. `content` holds the rendered
+// report (text for CSV/JSON, base64 for PDF) alongside its signature, so a
+// previously generated export can be re-served byte-for-byte rather than
+// re-rendered (re-rendering could legitimately produce different bytes for
+// the same period if new records arrived since, which would invalidate the
+// original signature).
+model RegulatoryExportRecord {
+  id             String                  @id @default(cuid())
+  reportType     RegulatoryReportType
+  format         RegulatoryExportFormat
+  periodStart    DateTime
+  periodEnd      DateTime
+  content        String
+  contentHash    String
+  signature      String
+  signerPublicKey String
+  generatedAt    DateTime                @default(now())
+
+  @@index([reportType, periodStart])
 }
 
 enum KycStatus {

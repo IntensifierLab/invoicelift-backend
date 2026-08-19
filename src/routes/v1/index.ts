@@ -1,7 +1,9 @@
 import type { FastifyPluginAsync } from "fastify";
 import { accountingIntegrationRoutes } from "./accountingIntegrations.js";
 import { auditRoutes } from "./audit.js";
+import { simulationRoutes } from "./simulations.js";
 import { drawdownRoutes } from "./drawdowns.js";
+import { regulatoryExportRoutes } from "./regulatoryExports.js";
 import { invoiceRoutes } from "./invoices.js";
 import { reconciliationRoutes } from "./reconciliation.js";
 import { kycRoutes } from "./kyc.js";
@@ -12,6 +14,7 @@ import { treatyRoutes } from "./treaties.js";
 import { delinquencyRoutes } from "./delinquency.js";
 import { repaymentRoutes } from "./repayments.js";
 import { partnerRoutes } from "./partners.js";
+import { jobsAdminRoutes } from "./jobsAdmin.js";
 
 export const v1Routes: FastifyPluginAsync = async (app) => {
   app.get("/meta", async () => ({
@@ -22,7 +25,9 @@ export const v1Routes: FastifyPluginAsync = async (app) => {
 
   await app.register(treatyRoutes);
   await app.register(drawdownRoutes);
+  await app.register(simulationRoutes);
   await app.register(auditRoutes);
+  await app.register(regulatoryExportRoutes);
   await app.register(invoiceRoutes);
   await app.register(reconciliationRoutes);
   await app.register(poolRoutes);
@@ -34,6 +39,7 @@ export const v1Routes: FastifyPluginAsync = async (app) => {
   await app.register(delinquencyRoutes);
   await app.register(repaymentRoutes);
   await app.register(partnerRoutes);
+  await app.register(jobsAdminRoutes);
 };
 
 // Contribution check by robert-j at 2024-11-18T13:22:45
