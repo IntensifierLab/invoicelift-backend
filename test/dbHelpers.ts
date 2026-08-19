@@ -10,6 +10,7 @@ export async function resetDb(prisma: PrismaClient): Promise<void> {
   await prisma.pool.deleteMany();
   await prisma.simulationRun.deleteMany();
   await prisma.emailLog.deleteMany();
+  await prisma.regulatoryExportRecord.deleteMany();
   await prisma.notificationPreference.deleteMany();
   await prisma.kycCredential.deleteMany();
   await prisma.partner.deleteMany();

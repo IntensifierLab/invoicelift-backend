@@ -9,6 +9,7 @@ import {
   startInvoiceTimeoutMonitor,
   startRepaymentReminderMonitor,
 } from "./jobs/index.js";
+import { startRegulatoryExportScheduler } from "./jobs/regulatoryExportScheduler.js";
 import { standardErrorHandler } from "./lib/errors.js";
 import { facilityDeps } from "./lib/facilityDeps.js";
 import { fastifyLoggerOptions } from "./lib/logger.js";
@@ -59,6 +60,9 @@ export async function buildServer() {
   await app.register(v1Routes, { prefix: config.apiPrefix });
 
   const monitor = config.enableFacilityMonitor ? startFacilityMonitor(facilityDeps) : null;
+  const regulatoryExportScheduler = config.regulatoryExportScheduleEnabled
+    ? startRegulatoryExportScheduler(facilityDeps.prisma)
+    : null;
   const invoiceTimeoutMonitor = config.enableInvoiceTimeoutMonitor
     ? startInvoiceTimeoutMonitor(facilityDeps.prisma)
     : null;
@@ -68,6 +72,7 @@ export async function buildServer() {
 
   app.addHook("onClose", async () => {
     monitor?.stop();
+    regulatoryExportScheduler?.stop();
     invoiceTimeoutMonitor?.stop();
     repaymentReminderMonitor?.stop();
     await jobQueue.drain();
