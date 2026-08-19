@@ -1,0 +1,63 @@
+name: Testnet E2E (manual)
+
+# Manual-dispatch only, deliberately: a real run of this workflow needs a
+# funded Stellar testnet account, deployed Soroban contract IDs (from the
+# separate contracts repo), and RPC access -- none of which exist as
+# secrets on this repo yet, and none of which should be a required check
+# on every push/PR (a missing secret would stamp a permanently-failing
+# check on main). See test/e2e/invoiceLifecycle.test.ts for the
+# stub-chain version of this scenario that DOES run on every PR.
+on:
+  workflow_dispatch:
+    inputs:
+      treasury_contract_id:
+        description: "Deployed pool-manager contract ID (leave blank to use SOROBAN_POOL_MANAGER_CONTRACT_ID secret, if set)"
+        required: false
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  testnet-e2e:
+    name: Deploy + validate full lifecycle on testnet
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install
+
+      # TODO: deploy all 3 contracts (pool-manager, invoice-registry,
+      # reinsurance-facility -- names per the contracts repo) to testnet
+      # here, once that repo/toolchain is wired into this workflow. This
+      # step is the actual "deploys all 3 contracts to testnet" acceptance
+      # criterion; it's intentionally left unimplemented rather than
+      # faked, since this repo has no access to that repo's deploy
+      # tooling or a funded testnet account to verify it against.
+      - name: Deploy contracts to testnet (not yet implemented)
+        run: |
+          echo "::warning::Contract deployment is not yet wired into this workflow -- see the TODO in this step."
+          echo "Once wired: set SOROBAN_POOL_MANAGER_CONTRACT_ID etc. from the deploy output,"
+          echo "then re-run the E2E suite below with ONCHAIN_CLIENT_MODE=soroban so it exercises"
+          echo "the real chain instead of the stub."
+
+      - name: Run migrations (test db)
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: "file:./test.db"
+
+      - name: Run full lifecycle E2E suite
+        run: npx vitest run test/e2e/invoiceLifecycle.test.ts
+        env:
+          DATABASE_URL: "file:./test.db"
+          # Flip to "soroban" once the deploy step above is implemented and
+          # ONCHAIN_CLIENT_MODE=soroban has a working SorobanOnChainClient.
+          ONCHAIN_CLIENT_MODE: stub
