@@ -82,6 +82,7 @@ export async function sendRepaymentReminders(
           currency: invoice.currency,
           dueDate: invoice.dueDate.toISOString().slice(0, 10),
         },
+        now,
       });
       sent++;
     } catch (err) {
