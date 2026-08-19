@@ -375,3 +375,36 @@ model Partner {
 
   @@index([apiKeyPrefix])
 }
+
+enum PrivilegedActionCategory {
+  FACILITY
+  INVOICE
+  POOL
+  KYC
+  ACCOUNTING
+  ADMIN
+}
+
+// General-purpose, append-only audit log for every privileged action in the
+// protocol — distinct from FacilityAuditEntry/InvoiceAuditEntry (which
+// predate this and stay in place for their existing call sites) in that
+// this one is domain-agnostic: `action` is a free-form string rather than a
+// closed enum, so new privileged actions in any domain don't need a schema
+// migration to start being logged here. No update/delete path is exposed
+// anywhere in the codebase — see privilegedAudit.ts.
+model PrivilegedAuditEntry {
+  id           String                   @id @default(cuid())
+  category     PrivilegedActionCategory
+  action       String
+  actor        String
+  resourceType String
+  resourceId   String
+  beforeState  Json?
+  afterState   Json?
+  createdAt    DateTime                 @default(now())
+
+  @@index([actor])
+  @@index([category, action])
+  @@index([createdAt])
+  @@index([resourceType, resourceId])
+}

@@ -1,5 +1,6 @@
 import type { PrismaClient, Treaty, TreatyStatus } from "@prisma/client";
 import { recordAudit } from "../lib/audit.js";
+import { recordPrivilegedAudit } from "../lib/privilegedAudit.js";
 
 export interface CreateTreatyInput {
   poolId: string;
@@ -32,6 +33,15 @@ export async function createTreaty(
     treatyId: treaty.id,
     detail: { ...input },
   });
+  await recordPrivilegedAudit(prisma, {
+    category: "FACILITY",
+    action: "TREATY_CREATED",
+    actor,
+    resourceType: "Treaty",
+    resourceId: treaty.id,
+    beforeState: null,
+    afterState: { ...input },
+  });
 
   return treaty;
 }
@@ -42,6 +52,7 @@ export async function updateTreaty(
   input: UpdateTreatyInput,
   actor: string,
 ): Promise<Treaty> {
+  const before = await prisma.treaty.findUnique({ where: { id } });
   const treaty = await prisma.treaty.update({ where: { id }, data: input });
 
   await recordAudit(prisma, {
@@ -49,6 +60,15 @@ export async function updateTreaty(
     actor,
     treatyId: treaty.id,
     detail: { ...input },
+  });
+  await recordPrivilegedAudit(prisma, {
+    category: "FACILITY",
+    action: "TREATY_UPDATED",
+    actor,
+    resourceType: "Treaty",
+    resourceId: treaty.id,
+    beforeState: before ? { ...before } : null,
+    afterState: { ...treaty },
   });
 
   return treaty;
