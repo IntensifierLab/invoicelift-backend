@@ -13,6 +13,7 @@ import { standardErrorHandler } from "./lib/errors.js";
 import { facilityDeps } from "./lib/facilityDeps.js";
 import { fastifyLoggerOptions } from "./lib/logger.js";
 import { createMailTransport } from "./lib/mailer.js";
+import { jobQueue } from "./lib/jobs.js";
 import { healthRoutes } from "./routes/health.js";
 import { v1Routes } from "./routes/v1/index.js";
 
@@ -69,6 +70,7 @@ export async function buildServer() {
     monitor?.stop();
     invoiceTimeoutMonitor?.stop();
     repaymentReminderMonitor?.stop();
+    await jobQueue.drain();
     await facilityDeps.prisma.$disconnect();
   });
 
