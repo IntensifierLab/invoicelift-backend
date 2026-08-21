@@ -6,7 +6,9 @@ import { isValidStellarAddress } from "../../lib/stellarSignature.js";
 import { sendValidationError, validateBody } from "../../lib/validation.js";
 import {
   DuplicateInvoiceError,
+  InvoiceAlreadyAcknowledgedError,
   InvoiceStateError,
+  acknowledgeInvoice,
   createInvoice,
   getInvoice,
   listInvoiceAuditLog,
@@ -34,6 +36,10 @@ const createInvoiceSchema = z.object({
 
 const signatureSchema = z.object({
   signature: z.string().min(1),
+});
+
+const acknowledgeSchema = z.object({
+  note: z.string().min(1).max(2000).optional(),
 });
 
 const listQuerySchema = z.object({
@@ -150,6 +156,37 @@ export const invoiceRoutes: FastifyPluginAsync = async (app) => {
       }
       return reply.status(200).send(result.invoice);
     } catch (err) {
+      if (err instanceof InvoiceStateError) {
+        return reply.status(409).send({ error: err.message });
+      }
+      throw err;
+    }
+  });
+
+  app.post("/invoices/:id/acknowledge", async (req, reply) => {
+    const { id } = req.params as { id: string };
+    const parsed = acknowledgeSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      return reply.status(400).send({ error: parsed.error.flatten() });
+    }
+
+    const invoice = await getInvoice(facilityDeps.prisma, id);
+    if (!invoice) {
+      return reply.status(404).send({ error: "Invoice not found" });
+    }
+
+    try {
+      const updated = await acknowledgeInvoice(
+        facilityDeps.prisma,
+        id,
+        BUYER_ACTOR,
+        parsed.data.note,
+      );
+      return reply.status(200).send(updated);
+    } catch (err) {
+      if (err instanceof InvoiceAlreadyAcknowledgedError) {
+        return reply.status(409).send({ error: err.message });
+      }
       if (err instanceof InvoiceStateError) {
         return reply.status(409).send({ error: err.message });
       }

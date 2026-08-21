@@ -48,6 +48,7 @@ enum InvoiceAuditAction {
   BUYER_SIGNATURE_REJECTED
   VERIFICATION_COMPLETED
   VERIFICATION_EXPIRED
+  BUYER_ACKNOWLEDGED
   INVOICE_AUTO_IMPORTED
   INVOICE_SYNC_UPDATED
   INVOICE_SYNC_FLAGGED
@@ -165,6 +166,12 @@ model Invoice {
   verificationDeadline DateTime?
   rejectionReason      String?
   verifiedAt           DateTime?
+  // Set once the buyer confirms receipt of the underlying goods/services —
+  // distinct from buyerSignature (which authenticates the invoice terms
+  // pre-financing). De-risks financing by giving lenders a signal that the
+  // buyer actually received what they're being asked to pay for.
+  acknowledgedAt       DateTime?
+  acknowledgementNote  String?
   createdAt            DateTime      @default(now())
   updatedAt            DateTime      @updatedAt
 
