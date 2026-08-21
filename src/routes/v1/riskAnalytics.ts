@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { z } from "zod";
 import { facilityDeps } from "../../lib/facilityDeps.js";
+import { InvoiceNotFoundError, computeFraudScore } from "../../services/fraudScoringService.js";
 import {
   UnknownBuyerError,
   checkSystemicAlerts,
@@ -40,5 +41,18 @@ export const riskAnalyticsRoutes: FastifyPluginAsync = async (app) => {
 
   app.get("/risk/alerts", async () => {
     return { alerts: await checkSystemicAlerts(facilityDeps.prisma) };
+  });
+
+  app.get("/risk/invoices/:id/fraud-score", async (req, reply) => {
+    const { id } = req.params as { id: string };
+
+    try {
+      return await computeFraudScore(facilityDeps.prisma, id);
+    } catch (err) {
+      if (err instanceof InvoiceNotFoundError) {
+        return reply.status(404).send({ error: err.message });
+      }
+      throw err;
+    }
   });
 };
